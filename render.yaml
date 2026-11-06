@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: relay-support-agent
+    runtime: node
+    plan: free
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: NODE_VERSION
+        value: '24'
+      - key: NODE_ENV
+        value: production
+      - key: AGENT_MODE
+        value: demo
+      - key: COOKIE_SECURE
+        value: 'true'
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: SQLITE_PATH
+        value: /tmp/relay/relay.sqlite
