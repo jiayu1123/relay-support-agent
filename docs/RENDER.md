@@ -31,3 +31,9 @@ The public demo permits unauthenticated sample accounts. Before exposing a paid 
 ## GitHub Actions
 
 The included CI workflow runs tests with PostgreSQL, authored demo evaluations, and the production build. The Blueprint's `checksPass` auto-deploy trigger waits for successful checks on future pushes. Initial deployment must still be verified with its build status, HTTP health, and end-to-end workflow.
+
+## Current hosted instance
+
+Live demo: https://relay-support-agent-9jls.onrender.com
+
+The current service was created directly through Render in My Workspace, Virginia, using the free Node compute plan. It is linked to `main` with auto-deploy on commit. The Blueprint remains a reproducible option for creating another instance; it does not currently manage this directly created service. A session signing secret is generated in application memory on each process start, matching this ephemeral sample-data deployment. No API key is configured and no paid model calls occur.

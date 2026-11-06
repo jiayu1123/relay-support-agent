@@ -1,6 +1,6 @@
 # Deployment
 
-The delivered application is a standard Node service with a Vite-built client. The service serves both `/api` and built frontend assets. No public deployment URL is included or claimed by the source package.
+The delivered application is a standard Node service with a Vite-built client. The service serves both `/api` and built frontend assets. The verified public demo is https://relay-support-agent-9jls.onrender.com, deployed on Render in offline demo mode. See `verification/deployment.json` for the hosted workflow checks.
 
 ## Option A: Node host + PostgreSQL
 

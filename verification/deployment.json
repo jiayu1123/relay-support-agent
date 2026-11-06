@@ -1,0 +1,63 @@
+{
+  "url": "https://relay-support-agent-9jls.onrender.com",
+  "verifiedAt": "2026-11-06T22:20:25Z",
+  "mode": "demo",
+  "database": "sqlite",
+  "checks": [
+    {
+      "name": "Public HTTPS health endpoint",
+      "passed": true
+    },
+    {
+      "name": "Frontend HTML and built assets are served",
+      "passed": true
+    },
+    {
+      "name": "Six sample orders are available",
+      "passed": true
+    },
+    {
+      "name": "Chat invokes tools and prepares an exchange proposal",
+      "passed": true
+    },
+    {
+      "name": "No order resolution before confirmation",
+      "passed": true
+    },
+    {
+      "name": "Separate visitors cannot access or confirm each other's requests",
+      "passed": true
+    },
+    {
+      "name": "Confirmation is saved and repeated confirmation is idempotent",
+      "passed": true
+    },
+    {
+      "name": "Order status and inventory reflect the confirmed exchange",
+      "passed": true
+    },
+    {
+      "name": "Conversation and confirmation persist across requests",
+      "passed": true
+    },
+    {
+      "name": "Expired order does not receive a refund proposal",
+      "passed": true
+    },
+    {
+      "name": "Cross-origin writes are rejected",
+      "passed": true
+    },
+    {
+      "name": "Hosted offline evaluation passes all 20 scenarios",
+      "passed": true
+    }
+  ],
+  "scenarios": {
+    "passed": 20,
+    "total": 20,
+    "assertions": 79
+  },
+  "browserVisualQA": false,
+  "liveLLMVerified": false
+}

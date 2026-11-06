@@ -2,6 +2,10 @@
 
 **Customer support, resolved—with explicit confirmation and inspectable tools.**
 
+**[Open the live demo](https://relay-support-agent-9jls.onrender.com)** · [Source code](https://github.com/jiayu1123/relay-support-agent)
+
+The public demo is running on Render in **offline demo mode**. No login or API key is required. It executes real sample-store database workflows, but does not call an LLM or process payments. The free instance may take time to wake after inactivity, and sample data resets on instance replacement.
+
 Relay is a full-stack portfolio project for a fictional ecommerce store. An agent investigates order issues, retrieves store policies, prepares exchange or return/refund proposals, and hands difficult cases to an internal specialist queue. Order changes require an explicit customer confirmation and a fresh server-side eligibility check.
 
 [Deploy your own instance on Render](https://render.com/deploy?repo=https://github.com/jiayu1123/relay-support-agent) · [Deployment details](docs/RENDER.md)
