@@ -28,3 +28,7 @@ Render deploy `dep-dbn54rbm8hqs73a3pqi0` is live, built from source commit `a0c9
 ## Live model enabled
 
 Render deployment `dep-dbn5c2ei0phs73bjn480` runs the OpenAI adapter with `gpt-4.1-mini`. Actual live API responses and nonzero token usage were observed. An eligible exchange completed after an initial no-proposal attempt was retried; an expired-order return produced no proposal and no order mutation. Confirmation, inventory updates, idempotency, isolation and origin checks passed. The 20 authored evaluation scenarios continue to use the offline engine; no 20/20 live-model claim is made. See `verification/live-deployment.json`.
+
+## Studio UI refresh
+
+Source commit `085bafd0f4b1456dfcbd74d4669363ba47adb3c8` is live in Render deployment `dep-dbn5hp8n74is73emh02g`. GitHub CI passed 30 tests, the 20-scenario offline suite, and the production build. Hosted CSS and JavaScript match the locally verified build byte for byte. Bootstrap works and the OpenAI mode and model configuration remain intact. Visual browser and screenshot QA remain unverified; no supported browser-control tool was available. See `verification/ui-deployment.json`.

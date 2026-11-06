@@ -1,0 +1,27 @@
+{
+  "url": "https://relay-support-agent-9jls.onrender.com",
+  "verifiedAt": "2026-11-06T22:47:57Z",
+  "sourceCommit": "085bafd0f4b1456dfcbd74d4669363ba47adb3c8",
+  "deploymentId": "dep-dbn5hp8n74is73emh02g",
+  "checks": [
+    {
+      "asset": "/assets/index-B3bbYPqE.js",
+      "sha256": "371283197ef50b2e6da6cf9b8e31cdcb004d21b11fd47ce691c1a1a2669d2916",
+      "matchesLocalBuild": true
+    },
+    {
+      "asset": "/assets/index-Chjv7tM0.css",
+      "sha256": "364f3cf3b2aebeea70ada48eac19d7d73208aaaceeaed26da1ad05ae594de8ed",
+      "matchesLocalBuild": true
+    }
+  ],
+  "agentMode": "openai",
+  "model": "gpt-4.1-mini",
+  "bootstrapVerified": true,
+  "browserVisualQA": false,
+  "notes": [
+    "The hosted JavaScript and CSS match the local production build byte for byte.",
+    "UI data is scoped to the current demo account; no production metrics or compliance claims are fabricated.",
+    "Browser screenshot and interaction QA remain unverified because a supported browser tool was unavailable."
+  ]
+}

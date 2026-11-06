@@ -33,6 +33,10 @@ npm start
 
 Open **http://localhost:3001**. SQLite creates its local database automatically. Set a persistent `SESSION_SECRET` in `.env` to preserve demo sessions across server restarts. Generate a value with `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`.
 
+## Agent Studio interface
+
+The light Studio UI includes top navigation, an account overview, conversation history, and enforced-policy summaries. Overview metrics come from the current account and its latest offline evaluation; no success-rate, customer-rating, or compliance badges are pre-filled. Open **Test agent** to chat, or use the top navigation to inspect orders, knowledge, insights, and workflows.
+
 ## What works
 
 - Responsive React/TypeScript support workspace with persisted conversations.
