@@ -83,7 +83,7 @@ function App() {
     [evaluating, setEvaluating] = useState(false),
     [expanded, setExpanded] = useState<string | null>(null),
     [localProposals, setLocalProposals] = useState<Record<string, string>>({});
-  const bottom = useRef<HTMLDivElement>(null);
+  const chatScroll = useRef<HTMLDivElement>(null);
   async function refresh() {
     const d = await api('/bootstrap');
     setData(d);
@@ -94,8 +94,13 @@ function App() {
     refresh().catch((e) => setError(e.message));
   }, []);
   useEffect(() => {
-    bottom.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, busy]);
+    const container = chatScroll.current;
+    if (page !== 'workspace' || !container) return;
+    container.scrollTo({
+      top: messages.length || busy ? container.scrollHeight : 0,
+      behavior: messages.length ? 'smooth' : 'auto',
+    });
+  }, [messages, busy, page]);
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'auto' });
   }, [page]);
@@ -356,7 +361,7 @@ function App() {
                   </div>
                   <span className="agent-pill">AGENT</span>
                 </div>
-                <div className="chat-scroll" aria-live="polite">
+                <div className="chat-scroll" ref={chatScroll} aria-live="polite">
                   {!messages.length ? (
                     <div className="empty-chat">
                       <div className="welcome-icon">
@@ -535,7 +540,6 @@ function App() {
                       Checking the details…
                     </div>
                   )}
-                  <div ref={bottom} />
                 </div>
                 <form
                   className="composer"

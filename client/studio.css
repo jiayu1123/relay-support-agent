@@ -788,8 +788,15 @@ select:focus-visible {
   border-color: #e0e7ef;
   border-radius: 13px;
   height: calc(100dvh - 308px);
-  min-height: 650px;
+  min-height: 360px;
+  grid-template-rows: minmax(0, 1fr);
   box-shadow: 0 2px 5px #14223804;
+}
+.chat-panel {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  min-height: 0;
+  overflow: hidden;
 }
 .panel-header {
   height: 78px;
@@ -816,6 +823,9 @@ select:focus-visible {
 }
 .chat-scroll {
   background: #fff;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 .empty-chat {
   max-width: 660px;
@@ -869,6 +879,10 @@ select:focus-visible {
 .composer {
   border-color: #edf1f6;
   padding: 16px 23px 13px;
+  min-width: 0;
+  background: #fff;
+  position: relative;
+  z-index: 1;
 }
 .input-wrap {
   border-color: #dde6ef;
@@ -1586,7 +1600,7 @@ td small {
   }
   .playground {
     height: calc(100dvh - 345px);
-    min-height: 650px;
+    min-height: 360px;
     grid-template-columns: minmax(0, 1fr) 285px;
   }
   .empty-chat h2 {
@@ -1870,8 +1884,9 @@ td small {
     height: auto;
   }
   .chat-panel {
-    min-height: 650px;
-    height: calc(100dvh - 275px);
+    min-height: 360px;
+    height: max(360px, calc(100dvh - 300px));
+    flex-shrink: 0;
   }
   .context-panel {
     display: flex;
