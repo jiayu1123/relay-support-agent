@@ -308,6 +308,114 @@ describe('HTTP integration', () => {
   });
 });
 describe('Live model adapter (mocked API, no paid calls)', () => {
+  it('finishes an explicitly requested exchange instead of asking whether to prepare it', async () => {
+    let calls = 0;
+    const client = {
+      chat: {
+        completions: {
+          create: async (payload: any) => {
+            if (++calls === 1)
+              return {
+                choices: [
+                  {
+                    message: {
+                      role: 'assistant',
+                      content:
+                        'The replacement is in stock. Would you like me to prepare an exchange for you now?',
+                    },
+                  },
+                ],
+              };
+            if (calls === 2) {
+              expect(payload.tool_choice).toEqual({
+                type: 'function',
+                function: { name: 'propose_resolution' },
+              });
+              return {
+                choices: [
+                  {
+                    message: {
+                      role: 'assistant',
+                      content: null,
+                      tool_calls: [
+                        {
+                          id: 'requested_exchange',
+                          type: 'function',
+                          function: {
+                            name: 'propose_resolution',
+                            arguments: JSON.stringify({
+                              orderId: 'RL-1042',
+                              action: 'exchange',
+                              reason: 'Headphones have no sound on the left side.',
+                            }),
+                          },
+                        },
+                      ],
+                    },
+                  },
+                ],
+              };
+            }
+            return {
+              choices: [
+                {
+                  message: {
+                    role: 'assistant',
+                    content: 'Please review and confirm the replacement proposal below.',
+                  },
+                },
+              ],
+            };
+          },
+        },
+      },
+    };
+    const result = await runAgent(
+      ctx,
+      [
+        {
+          role: 'user',
+          content: 'My RL-1042 headphones have no sound on the left side. Can I get a replacement?',
+        },
+      ],
+      { mode: 'openai', client: client as any },
+    );
+    expect(calls).toBe(3);
+    expect(result.proposal?.action).toBe('exchange');
+    expect(await db.query('SELECT * FROM resolutions')).toHaveLength(0);
+  });
+  it.each(['Please explain the return policy for RL-1042.', 'I do not want a refund for RL-1042.'])(
+    'does not prepare a proposal for informational or negated requests: %s',
+    async (content) => {
+      let calls = 0;
+      const client = {
+        chat: {
+          completions: {
+            create: async () => {
+              calls++;
+              return {
+                choices: [
+                  {
+                    message: {
+                      role: 'assistant',
+                      content: 'No order changes have been requested or made.',
+                    },
+                  },
+                ],
+              };
+            },
+          },
+        },
+      };
+      const result = await runAgent(ctx, [{ role: 'user', content }], {
+        mode: 'openai',
+        client: client as any,
+      });
+      expect(calls).toBe(1);
+      expect(result.proposal).toBeNull();
+      expect(await db.query('SELECT * FROM proposals')).toHaveLength(0);
+    },
+  );
   it('looks up a supplied order and repairs a redundant ID question before preparing the exchange', async () => {
     let calls = 0;
     const client = {

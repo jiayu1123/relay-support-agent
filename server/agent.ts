@@ -37,6 +37,30 @@ function asksForOrderId(text: string): boolean {
     text,
   );
 }
+
+function directResolutionRequest(history: Turn[]): 'exchange' | 'refund' | null {
+  const text = [...history].reverse().find((turn) => turn.role === 'user')?.content || '';
+  if (
+    /\b(?:don't|do not|not|never)\s+(?:want|need|request|refund|exchange|replace|return)\b|不要(?:退|换)|\b(?:human|specialist)\b|人工/i.test(
+      text,
+    )
+  )
+    return null;
+  if (
+    /\b(?:explain|describe|what are|what is|tell me about)\b.*\b(?:polic(?:y|ies)|rules|window)\b|了解.*政策/i.test(
+      text,
+    )
+  )
+    return null;
+  const request =
+    /\b(?:can|could|may) i (?:get|have|request)|\bi (?:want|need|would like)|\bi'd like|\b(?:please|prepare|request)\b|\b(?:refund|exchange|return) (?:rl[-\s]?\d{4}|it|my)\b|我(?:想|要)|(?:可以|能).*?(?:退|换)|申请/i.test(
+      text,
+    );
+  if (!request) return null;
+  const exchange = /\b(?:exchange|replace|replacement)\b|换货|换一个/i.test(text);
+  const refund = /\b(?:refund|return)\b|退货|退款/i.test(text);
+  return exchange === refund ? null : exchange ? 'exchange' : 'refund';
+}
 export async function runAgent(
   ctx: Context,
   history: Turn[],
@@ -85,16 +109,18 @@ export async function runAgent(
       if (!lookup.error) identifiedOrder = lookup;
     }
     let correctedRepeatedQuestion = false;
-    let requireToolNext = false;
+    let forcedResolutionCheck = false;
+    const requestedAction = directResolutionRequest(history);
+    let nextToolChoice: 'required' | { type: 'function'; function: { name: string } } | undefined;
     for (let step = 0; step < 7; step++) {
       const response = await client.chat.completions.create({
         model,
         messages,
         tools: toolDefinitions,
-        ...(requireToolNext ? { tool_choice: 'required' as const } : {}),
+        ...(nextToolChoice ? { tool_choice: nextToolChoice } : {}),
         max_completion_tokens: 1000,
       });
-      requireToolNext = false;
+      nextToolChoice = undefined;
       usage.inputTokens += response.usage?.prompt_tokens || 0;
       usage.outputTokens += response.usage?.completion_tokens || 0;
       const message = response.choices[0]?.message;
@@ -108,7 +134,7 @@ export async function runAgent(
               content: `Order ${identifiedOrder.id} was already successfully looked up for this customer. Its ID and data are in the tool result above. Do not ask for the order ID again. Use the available tools to continue the customer's request. Never bypass policy or confirmation.`,
             });
             correctedRepeatedQuestion = true;
-            requireToolNext = true;
+            nextToolChoice = 'required';
             continue;
           }
           const proposal = [...ctx.traces].reverse().find((t) => (t.output as any)?.proposal);
@@ -122,7 +148,36 @@ export async function runAgent(
               : `I located order ${identifiedOrder.id}, but could not complete this request. Please retry or ask for a specialist. No new exchange or refund request was created.`;
           break;
         }
-        text = message.content || 'Please tell me which order you need help with.';
+        const checkedRequestedAction =
+          identifiedOrder &&
+          requestedAction &&
+          ctx.traces.some(
+            (trace) =>
+              trace.tool === 'propose_resolution' &&
+              (trace.input as any)?.orderId === identifiedOrder.id &&
+              (trace.input as any)?.action === requestedAction,
+          );
+        if (
+          identifiedOrder &&
+          requestedAction &&
+          !checkedRequestedAction &&
+          !forcedResolutionCheck &&
+          step < 6
+        ) {
+          messages.push(message);
+          messages.push({
+            role: 'system',
+            content: `The customer already requested an ${requestedAction} for verified order ${identifiedOrder.id}. Preparing a proposal is not executing an order change. Call propose_resolution to let the backend check eligibility, using the customer's stated issue as the reason. Do not ask for permission merely to prepare the proposal. The customer will still have to click the confirmation card before any resolution is executed.`,
+          });
+          forcedResolutionCheck = true;
+          nextToolChoice = { type: 'function', function: { name: 'propose_resolution' } };
+          continue;
+        }
+        text =
+          message.content ||
+          (identifiedOrder
+            ? `I found order ${identifiedOrder.id}, but could not complete this request. Please retry or ask for a specialist. No order changes were made.`
+            : 'Please tell me which order you need help with.');
         break;
       }
       messages.push(message);
