@@ -308,6 +308,196 @@ describe('HTTP integration', () => {
   });
 });
 describe('Live model adapter (mocked API, no paid calls)', () => {
+  it('looks up a supplied order and repairs a redundant ID question before preparing the exchange', async () => {
+    let calls = 0;
+    const client = {
+      chat: {
+        completions: {
+          create: async (payload: any) => {
+            calls++;
+            if (calls === 1) {
+              expect(payload.messages.at(-1).role).toBe('tool');
+              expect(JSON.parse(payload.messages.at(-1).content).id).toBe('RL-1042');
+              return {
+                choices: [
+                  {
+                    message: {
+                      role: 'assistant',
+                      content:
+                        'Could you please provide the order ID or any details to identify the order?',
+                    },
+                  },
+                ],
+              };
+            }
+            if (calls === 2) {
+              expect(payload.tool_choice).toBe('required');
+              return {
+                choices: [
+                  {
+                    message: {
+                      role: 'assistant',
+                      content: null,
+                      tool_calls: [
+                        {
+                          id: 'policy',
+                          type: 'function',
+                          function: {
+                            name: 'search_policy',
+                            arguments: JSON.stringify({ query: 'defective exchange' }),
+                          },
+                        },
+                        {
+                          id: 'stock',
+                          type: 'function',
+                          function: {
+                            name: 'check_inventory',
+                            arguments: JSON.stringify({ orderId: 'RL-1042' }),
+                          },
+                        },
+                        {
+                          id: 'proposal',
+                          type: 'function',
+                          function: {
+                            name: 'propose_resolution',
+                            arguments: JSON.stringify({
+                              orderId: 'RL-1042',
+                              action: 'exchange',
+                              reason: 'Headphones have no sound on the left side.',
+                            }),
+                          },
+                        },
+                      ],
+                    },
+                  },
+                ],
+              };
+            }
+            return {
+              choices: [
+                {
+                  message: {
+                    role: 'assistant',
+                    content:
+                      'Your replacement proposal is ready. Please review and confirm it. [EXC-02]',
+                  },
+                },
+              ],
+            };
+          },
+        },
+      },
+    };
+    const result = await runAgent(
+      ctx,
+      [
+        {
+          role: 'user',
+          content: 'My RL-1042 headphones have no sound on the left side. Can I get a replacement?',
+        },
+      ],
+      { mode: 'openai', client: client as any },
+    );
+    expect(calls).toBe(3);
+    expect(result.proposal?.order_id).toBe('RL-1042');
+    expect(result.text).not.toContain('provide the order ID');
+    expect(ctx.traces.map((t) => t.tool)).toEqual([
+      'get_order',
+      'search_policy',
+      'check_inventory',
+      'propose_resolution',
+    ]);
+    expect(await db.query('SELECT * FROM resolutions')).toHaveLength(0);
+    const [order] = await db.query('SELECT status FROM orders WHERE tenant=? AND id=?', [
+      'alice',
+      'RL-1042',
+    ]);
+    expect(order.status).toBe('delivered');
+  });
+  it.each([
+    'My headphones have no sound. Can I get a replacement?',
+    'Please compare RL-1042 and RL-1043.',
+  ])('does not choose an order when the request is missing or ambiguous: %s', async (content) => {
+    const client = {
+      chat: {
+        completions: {
+          create: async (payload: any) => {
+            expect(payload.messages.some((m: any) => m.role === 'tool')).toBe(false);
+            return {
+              choices: [
+                {
+                  message: { role: 'assistant', content: 'Which order would you like help with?' },
+                },
+              ],
+            };
+          },
+        },
+      },
+    };
+    const result = await runAgent(ctx, [{ role: 'user', content }], {
+      mode: 'openai',
+      client: client as any,
+    });
+    expect(ctx.traces).toHaveLength(0);
+    expect(result.proposal).toBeNull();
+  });
+  it('keeps unknown order references scoped and does not substitute a valid order', async () => {
+    const client = {
+      chat: {
+        completions: {
+          create: async (payload: any) => {
+            expect(JSON.parse(payload.messages.at(-1).content).error).toBe('ORDER_NOT_FOUND');
+            return {
+              choices: [
+                {
+                  message: {
+                    role: 'assistant',
+                    content:
+                      'I could not find that order in your account. Please check the order number.',
+                  },
+                },
+              ],
+            };
+          },
+        },
+      },
+    };
+    const result = await runAgent(
+      ctx,
+      [{ role: 'user', content: 'Please exchange my broken RL-9999.' }],
+      { mode: 'openai', client: client as any },
+    );
+    expect(ctx.traces).toHaveLength(1);
+    expect(ctx.traces[0].input).toEqual({ orderId: 'RL-9999' });
+    expect(result.proposal).toBeNull();
+  });
+  it('stops a repeated ID-question loop without claiming a completed action', async () => {
+    let calls = 0;
+    const client = {
+      chat: {
+        completions: {
+          create: async () => {
+            calls++;
+            return {
+              choices: [
+                { message: { role: 'assistant', content: 'Please provide your order number.' } },
+              ],
+            };
+          },
+        },
+      },
+    };
+    const result = await runAgent(
+      ctx,
+      [{ role: 'user', content: 'My RL-1042 headphones are broken.' }],
+      { mode: 'openai', client: client as any },
+    );
+    expect(calls).toBe(2);
+    expect(result.text).toContain('I located order RL-1042');
+    expect(result.text).not.toContain('provide your order number');
+    expect(result.proposal).toBeNull();
+    expect(await db.query('SELECT * FROM resolutions')).toHaveLength(0);
+  });
   it('executes validated model tool calls and continues with tool results', async () => {
     let calls = 0;
     const client = {
