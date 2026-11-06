@@ -8,7 +8,6 @@ import {
   CheckCheck,
   ChevronDown,
   ChevronRight,
-  Command,
   Plus,
   MessageSquare,
   Package,
@@ -17,15 +16,12 @@ import {
   Workflow,
   ShieldCheck,
   RefreshCw,
-  Clock,
   Search,
   Headphones,
   ShoppingBag,
   Speaker,
   Plug,
-  PanelLeftClose,
   Activity,
-  ExternalLink,
   X,
   Download,
   Terminal,
@@ -33,13 +29,16 @@ import {
   AlertCircle,
   Loader2,
   Layers,
-  Code2,
+  Bot,
+  LayoutDashboard,
 } from 'lucide-react';
 import { api } from './api';
 import './style.css';
+import './studio.css';
+import { Overview } from './Overview';
 
 type Message = { id: string; role: string; content: string; metadata: any; created_at: string };
-type Page = 'workspace' | 'orders' | 'knowledge' | 'evaluations' | 'architecture';
+type Page = 'overview' | 'workspace' | 'orders' | 'knowledge' | 'evaluations' | 'architecture';
 const cash = (c: number) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(c / 100);
 const human = (s: string) => s.replaceAll('_', ' ');
@@ -72,7 +71,7 @@ const samples = [
 
 function App() {
   const [data, setData] = useState<any>(null),
-    [page, setPage] = useState<Page>('workspace'),
+    [page, setPage] = useState<Page>('overview'),
     [conversation, setConversation] = useState<string | null>(null),
     [messages, setMessages] = useState<Message[]>([]),
     [input, setInput] = useState(''),
@@ -83,7 +82,6 @@ function App() {
     [report, setReport] = useState<any>(null),
     [evaluating, setEvaluating] = useState(false),
     [expanded, setExpanded] = useState<string | null>(null),
-    [menu, setMenu] = useState(false),
     [localProposals, setLocalProposals] = useState<Record<string, string>>({});
   const bottom = useRef<HTMLDivElement>(null);
   async function refresh() {
@@ -98,6 +96,9 @@ function App() {
   useEffect(() => {
     bottom.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, busy]);
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }, [page]);
   async function open(id: string) {
     if (busy) return;
     setError('');
@@ -106,7 +107,6 @@ function App() {
       setConversation(id);
       setMessages(d.messages);
       setPage('workspace');
-      setMenu(false);
     } catch (e) {
       setError((e as Error).message);
     }
@@ -118,7 +118,6 @@ function App() {
     setInput('');
     setError('');
     setPage('workspace');
-    setMenu(false);
   }
   async function send(text = input) {
     if (!text.trim() || busy) return;
@@ -225,126 +224,58 @@ function App() {
       </div>
     );
   const nav = [
-    { id: 'workspace', label: 'Agent playground', icon: MessageSquare },
-    { id: 'orders', label: 'Orders & resolutions', icon: Package },
-    { id: 'knowledge', label: 'Knowledge base', icon: BookOpen },
-    { id: 'evaluations', label: 'Evaluations', icon: FlaskConical },
-    { id: 'architecture', label: 'Under the hood', icon: Workflow },
+    { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+    { id: 'workspace', label: 'Playground', icon: MessageSquare },
+    { id: 'knowledge', label: 'Knowledge', icon: BookOpen },
+    { id: 'orders', label: 'Orders', icon: Package },
+    { id: 'evaluations', label: 'Insights', icon: FlaskConical },
+    { id: 'architecture', label: 'Workflows', icon: Workflow },
   ];
   return (
     <div className="app">
-      <aside className={`sidebar ${menu ? 'mobile-open' : ''}`}>
+      <header className="studio-header">
         <a
-          className="brand"
           href="#"
+          className="studio-brand"
           onClick={(e) => {
             e.preventDefault();
-            fresh();
+            setPage('overview');
           }}
         >
-          <span className="brand-mark">
-            r<span>↗</span>
+          <span className="studio-brand-icon">
+            <Bot size={24} />
           </span>
           <span>
-            relay<span className="brand-dot">.</span>
+            Relay <b>Agent Studio</b>
           </span>
         </a>
-        <div className="workspace-label">
-          <span className="store-avatar">N</span>
-          <div>
-            Northstar Store<small>Support workspace</small>
-          </div>
-          <ChevronDown size={15} />
-        </div>
-        <div className="nav-caption">WORKSPACE</div>
-        <nav>
+        <nav className="studio-nav" aria-label="Main navigation">
           {nav.map((n) => (
             <button
               key={n.id}
               className={page === n.id ? 'active' : ''}
+              aria-current={page === n.id ? 'page' : undefined}
               onClick={() => {
                 setPage(n.id as Page);
-                setMenu(false);
                 setSearch('');
               }}
             >
-              <n.icon size={18} />
-              <span>{n.label}</span>
-              {n.id === 'evaluations' && <span className="nav-count">20</span>}
+              <n.icon size={16} />
+              {n.label}
             </button>
           ))}
         </nav>
-        <div className="conversations-heading">
-          <span>CONVERSATIONS</span>
-          <button title="New conversation" onClick={fresh} disabled={busy}>
-            <Plus size={17} />
-          </button>
+        <div className="studio-header-right">
+          <span className="studio-environment" title={data.model}>
+            <i />
+            {data.mode === 'openai' ? 'Live LLM' : 'Sandbox'}
+          </span>
+          <span className="studio-avatar" title="Jiayu's workspace">
+            JZ
+          </span>
         </div>
-        <div className="conversation-list">
-          {data.conversations.length ? (
-            data.conversations.slice(0, 8).map((c: any) => (
-              <button
-                key={c.id}
-                className={conversation === c.id ? 'selected' : ''}
-                onClick={() => open(c.id)}
-                disabled={busy}
-              >
-                <MessageSquare size={14} />
-                <span>{c.title}</span>
-              </button>
-            ))
-          ) : (
-            <p>Your conversations will appear here.</p>
-          )}
-        </div>
-        <div className="sidebar-bottom">
-          <div className="sandbox-card">
-            <span className="small-dot" />
-            <b>{data.mode === 'demo' ? 'Demo environment' : 'Live model connected'}</b>
-            <p>
-              {data.mode === 'demo'
-                ? 'Real workflows. Sample store data. No model API calls.'
-                : 'LLM tool calling. Sample store data. No real payments.'}
-            </p>
-            <button onClick={() => setPage('architecture')}>
-              Explore the architecture <ArrowUpRight size={14} />
-            </button>
-          </div>
-          <div className="profile">
-            <span>JZ</span>
-            <div>
-              Jiayu's workspace<small>Personal project</small>
-            </div>
-            <ShieldCheck size={17} />
-          </div>
-        </div>
-      </aside>
+      </header>
       <main>
-        <header className="topbar">
-          <div>
-            <button
-              className="mobile-toggle"
-              aria-label="Toggle menu"
-              onClick={() => setMenu(!menu)}
-            >
-              <Layers size={20} />
-            </button>
-            <span className="breadcrumb">Workspace</span>
-            <ChevronRight size={14} />
-            <b>{nav.find((n) => n.id === page)?.label}</b>
-          </div>
-          <div className="top-right">
-            <span className="environment">
-              <span className="small-dot" /> {data.mode === 'demo' ? 'Sandbox' : 'Live LLM'}
-            </span>
-            <span className="version">v1.0</span>
-            <button className="guide-button" onClick={() => setPage('architecture')}>
-              <Code2 size={17} />
-              <span>Project guide</span>
-              <ArrowUpRight size={13} />
-            </button>
-          </div>
-        </header>
         {error && (
           <div role="alert" className="error-banner">
             <AlertCircle size={17} />
@@ -354,24 +285,62 @@ function App() {
             </button>
           </div>
         )}
-        {page === 'workspace' ? (
+        {page === 'overview' ? (
+          <Overview
+            data={data}
+            report={report}
+            busy={busy}
+            onOpen={open}
+            onTest={fresh}
+            onExample={(text) => {
+              fresh();
+              setInput(text);
+            }}
+            onNavigate={(next) => {
+              setPage(next);
+              setSearch('');
+            }}
+            onRefresh={() => {
+              refresh().catch((e) => setError(e.message));
+            }}
+          />
+        ) : page === 'workspace' ? (
           <>
             <section className="page-heading">
               <div>
                 <div className="eyebrow">
                   <span /> CUSTOMER SUPPORT AGENT
                 </div>
-                <h1>
-                  A little less friction.
-                  <br className="mobile-break" /> A lot more resolved.
-                </h1>
-                <p>Give customers a clear answer. Give every action a paper trail.</p>
+                <h1>Agent playground</h1>
+                <p>Test a customer request and inspect every step from answer to action.</p>
               </div>
               <button className="secondary" onClick={fresh} disabled={busy}>
                 <Plus size={16} />
                 New conversation
               </button>
             </section>
+            <div className="history-toolbar">
+              <label>
+                <MessageSquare size={15} />
+                <span>Conversation</span>
+                <select
+                  aria-label="Select a saved conversation"
+                  value={conversation || ''}
+                  disabled={busy}
+                  onChange={(e) => (e.target.value ? open(e.target.value) : fresh())}
+                >
+                  <option value="">New conversation</option>
+                  {data.conversations.map((c: any) => (
+                    <option value={c.id} key={c.id}>
+                      {c.title}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <span className="history-note">
+                <ShieldCheck size={14} /> Your sample account is isolated
+              </span>
+            </div>
             <div className="playground">
               <section className="chat-panel">
                 <div className="panel-header">
@@ -1162,6 +1131,12 @@ function App() {
           </section>
         )}
       </main>
+      {page === 'overview' && (
+        <button className="floating-test-agent" onClick={fresh} disabled={busy}>
+          <MessageSquare size={20} />
+          Test agent
+        </button>
+      )}
     </div>
   );
 }
