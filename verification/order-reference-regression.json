@@ -1,0 +1,104 @@
+{
+  "url": "https://relay-support-agent-9jls.onrender.com",
+  "verifiedAt": "2026-11-06T23:07:02Z",
+  "prompt": "My RL-1042 headphones have no sound on the left side. Can I get a replacement?",
+  "results": [
+    {
+      "attempt": 1,
+      "passed": true,
+      "checks": {
+        "liveModel": true,
+        "prefetchedOrder": true,
+        "proposalForCorrectOrder": true,
+        "noResolutionBeforeConfirmation": true,
+        "confirmedStateAndStock": true,
+        "idempotentConfirmation": true
+      },
+      "text": "Your Studio Wireless Headphones (order RL-1042) are eligible for an exchange due to the no sound issue on the left side. I have prepared an exchange proposal for you. To proceed, please confirm the exchange in your order application. The proposal expires soon, so timely confirmation is recommended. The exchange is according to our policy EXC-02.",
+      "tools": ["get_order", "propose_resolution"],
+      "usage": {
+        "inputTokens": 1692,
+        "outputTokens": 108
+      },
+      "latencyMs": 2776,
+      "proposalChecks": [
+        {
+          "input": {
+            "orderId": "RL-1042",
+            "action": "exchange",
+            "reason": "Headphones have no sound on the left side"
+          },
+          "allowed": true,
+          "code": null
+        }
+      ]
+    },
+    {
+      "attempt": 2,
+      "passed": true,
+      "checks": {
+        "liveModel": true,
+        "prefetchedOrder": true,
+        "proposalForCorrectOrder": true,
+        "noResolutionBeforeConfirmation": true
+      },
+      "text": "Your RL-1042 Studio Wireless Headphones with no sound on the left side are eligible for an exchange. If you would like to proceed, please confirm the exchange request within the app. This proposal expires soon. Let me know if you want me to assist further.",
+      "tools": ["get_order", "propose_resolution"],
+      "usage": {
+        "inputTokens": 1682,
+        "outputTokens": 89
+      },
+      "latencyMs": 1815,
+      "proposalChecks": [
+        {
+          "input": {
+            "orderId": "RL-1042",
+            "action": "exchange",
+            "reason": "Left side of the headphones has no sound"
+          },
+          "allowed": true,
+          "code": null
+        }
+      ]
+    },
+    {
+      "attempt": 3,
+      "passed": true,
+      "checks": {
+        "liveModel": true,
+        "prefetchedOrder": true,
+        "proposalForCorrectOrder": true,
+        "noResolutionBeforeConfirmation": true
+      },
+      "text": "The headphones you ordered (model RL-1042, Studio Wireless Headphones) are eligible for an exchange due to the no sound on the left side issue. We have them in stock for replacement.\n\nI have prepared an exchange proposal for you. If you confirm it, we will proceed with the replacement. Please confirm if you would like to go ahead.",
+      "tools": ["get_order", "check_inventory", "propose_resolution"],
+      "usage": {
+        "inputTokens": 2566,
+        "outputTokens": 124
+      },
+      "latencyMs": 2849,
+      "proposalChecks": [
+        {
+          "input": {
+            "orderId": "RL-1042",
+            "action": "exchange",
+            "reason": "No sound on the left side of headphones"
+          },
+          "allowed": true,
+          "code": null
+        }
+      ]
+    }
+  ],
+  "passed": 3,
+  "total": 3,
+  "note": "Three targeted live smoke attempts, not a production success-rate estimate.",
+  "sourceCommit": "4a247a948ea4108205babddb382d3d9ec52c8c58",
+  "deploymentId": "dep-dbn5qee1egvs73801aq0",
+  "previousBuildObservation": {
+    "sourceCommit": "bb8ca56894d848bd9c8b0ff3113f73b98538a9b1",
+    "passed": 2,
+    "total": 3,
+    "failure": "One model response asked whether to prepare an exchange instead of calling propose_resolution. The final revision added a bounded backend-check completion guard."
+  }
+}

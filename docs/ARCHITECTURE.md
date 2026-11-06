@@ -71,3 +71,9 @@ Additional tests independently exercise transaction rollback, race conditions, c
 - **Operations:** no worker queue, multi-instance turn lock, global distributed rate limiter, retention job, or production alerting. In-memory turn locks apply to one process only.
 - **Model behavior:** backend constraints protect business writes; generated text still needs live evaluation for hallucinations and unsupported promises.
 - **UI QA:** TypeScript/build and production HTTP/asset checks are automated. Visual browser QA was not available in the authoring environment and remains a manual step.
+
+## Order grounding and completion guards
+
+For a single explicit order ID in the latest user request, the live orchestrator performs an authorized `get_order` read and supplies its real result before the first model response. It does not select an order when multiple IDs are mentioned or treat arbitrary numbers as order IDs. The model receives the current server time as well.
+
+If a model asks again for an already verified ID, a bounded correction requires it to continue using tools. For conservatively recognized direct exchange/refund requests, a model reply that stops before the backend proposal check is continued with a forced `propose_resolution` call. That operation enforces eligibility and may deny the request or ask for missing defect details; it still cannot execute a resolution. Informational/negated requests and ambiguous order references do not trigger this completion guard. Natural-language heuristics remain deliberately limited and require broader evaluation for additional cases.

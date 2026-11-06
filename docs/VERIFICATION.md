@@ -5,7 +5,7 @@ Verified in the authoring environment on 2026-11-06 with Node.js 24.22.1.
 | Check                                       | Observed result                                                                                  |
 | ------------------------------------------- | ------------------------------------------------------------------------------------------------ |
 | TypeScript + production client/server build | Passed                                                                                           |
-| Core automated tests                        | 25 passed                                                                                        |
+| Core automated tests                        | 34 passed                                                                                        |
 | Local setup safety tests                    | 3 passed; secret-free output, stable session, symlink and ignore checks                          |
 | PostgreSQL 17 integration test              | 1 passed against an actual local container                                                       |
 | Offline authored agent scenarios            | 20 / 20 passed, 79 assertions                                                                    |
@@ -32,3 +32,9 @@ Render deployment `dep-dbn5c2ei0phs73bjn480` runs the OpenAI adapter with `gpt-4
 ## Studio UI refresh
 
 Source commit `085bafd0f4b1456dfcbd74d4669363ba47adb3c8` is live in Render deployment `dep-dbn5hp8n74is73emh02g`. GitHub CI passed 30 tests, the 20-scenario offline suite, and the production build. Hosted CSS and JavaScript match the locally verified build byte for byte. Bootstrap works and the OpenAI mode and model configuration remain intact. Visual browser and screenshot QA remain unverified; no supported browser-control tool was available. See `verification/ui-deployment.json`.
+
+## Explicit order reference regression
+
+After a customer screenshot showed the model asking again for an already supplied order ID, the live orchestrator was changed to prefetch a single explicit order through the scoped tool executor. A bounded correction prevents repeated ID requests. Testing the first revision revealed a second premature stop: offering to prepare an exchange instead of actually preparing it. A completion guard now requires the backend proposal check for clear resolution requests, while leaving informational, negated, missing-ID, and ambiguous requests unforced. Confirmation remains a separate customer action.
+
+CI passed 38 tests, the 20-scenario offline suite, and the production build. Render deployment `dep-dbn5qee1egvs73801aq0`, source `4a247a948ea4108205babddb382d3d9ec52c8c58`, is live. The exact starter prompt completed three targeted real-model attempts with correct proposals; one attempt also verified confirmed order/stock state and idempotent retries. These are targeted smoke results, not a production success-rate estimate. See `verification/order-reference-regression.json`, including the previous revision’s observed failure.
