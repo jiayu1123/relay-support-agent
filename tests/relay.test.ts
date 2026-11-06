@@ -219,6 +219,13 @@ describe('Policy and retrieval', () => {
   });
 });
 describe('HTTP integration', () => {
+  it('keeps UI evaluations offline when chat is configured for a live model', async () => {
+    const agent = request.agent(createApp(db, { mode: 'openai' }));
+    const result = await agent.post('/api/evaluations').send({}).expect(200);
+    expect(result.body.mode).toBe('demo');
+    expect(result.body.passed).toBe(20);
+    expect(result.body.usage).toEqual({ inputTokens: 0, outputTokens: 0 });
+  });
   it('runs a complete persisted exchange workflow and prevents account crossover', async () => {
     const app = createApp(db, { mode: 'demo', secret: 'test-only' }),
       alice = request.agent(app),

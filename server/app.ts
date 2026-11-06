@@ -272,15 +272,11 @@ export function createApp(
     const t = res.locals.tenant;
     if (evalBusy.has(t))
       throw new AppError(409, 'EVAL_RUNNING', 'An evaluation is already running.');
-    if (mode === 'openai')
-      throw new AppError(
-        400,
-        'CLI_REQUIRED',
-        'Run npm run eval -- --mode=openai locally to explicitly opt into paid model evaluation.',
-      );
     evalBusy.add(t);
     try {
-      res.json(await evaluate(db, t, mode));
+      // The UI explicitly runs the offline suite, even when chat uses a live model.
+      // Paid model evaluations remain an explicit CLI operation.
+      res.json(await evaluate(db, t, 'demo'));
     } finally {
       evalBusy.delete(t);
     }
@@ -301,22 +297,20 @@ export function createApp(
         console.error(
           JSON.stringify({ event: 'request_failed', type: error?.constructor?.name || 'Error' }),
         );
-      res
-        .status(status)
-        .json({
-          error:
-            error instanceof AppError
-              ? error.code
-              : error instanceof z.ZodError
-                ? 'INVALID_INPUT'
-                : 'SERVER_ERROR',
-          message:
-            error instanceof AppError
-              ? error.message
-              : error instanceof z.ZodError
-                ? 'Please check the request fields.'
-                : 'The request could not be completed. Check server configuration and try again. No fallback model was used.',
-        });
+      res.status(status).json({
+        error:
+          error instanceof AppError
+            ? error.code
+            : error instanceof z.ZodError
+              ? 'INVALID_INPUT'
+              : 'SERVER_ERROR',
+        message:
+          error instanceof AppError
+            ? error.message
+            : error instanceof z.ZodError
+              ? 'Please check the request fields.'
+              : 'The request could not be completed. Check server configuration and try again. No fallback model was used.',
+      });
     },
   );
   return app;
