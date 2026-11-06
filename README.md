@@ -4,7 +4,7 @@
 
 **[Open the live demo](https://relay-support-agent-9jls.onrender.com)** · [Source code](https://github.com/jiayu1123/relay-support-agent)
 
-The public demo is running on Render in **offline demo mode**. No login or API key is required. It executes real sample-store database workflows, but does not call an LLM or process payments. The free instance may take time to wake after inactivity, and sample data resets on instance replacement.
+The public demo is running on Render with **OpenAI tool calling (`gpt-4.1-mini`)**. Visitors do not need to supply an API key. It executes sample-store database workflows after explicit confirmation; no real payments are processed. The free instance may take time to wake after inactivity, and sample data resets on instance replacement. Live-model usage is charged to the configured API project.
 
 Relay is a full-stack portfolio project for a fictional ecommerce store. An agent investigates order issues, retrieves store policies, prepares exchange or return/refund proposals, and hands difficult cases to an internal specialist queue. Order changes require an explicit customer confirmation and a fresh server-side eligibility check.
 
@@ -146,3 +146,7 @@ Northstar is fictional. Refunds are **requests**, not actual payments. Replaceme
 This is a portfolio application, not a claim of production adoption. See [architecture](docs/ARCHITECTURE.md), [中文上手与学习路线](docs/START-HERE.zh-CN.md), and [resume wording](docs/RESUME.md).
 
 For a short, explicitly paid real-model integration check after configuring your key, run `npm run verify:live`. It writes `data/live-verification.json` and tests live tool calling plus persisted outcomes.
+
+## Live-model verification
+
+The hosted OpenAI adapter was verified with an eligible exchange and an out-of-window return request. Checks covered actual token usage, tool execution, no order mutation before confirmation, atomic confirmation, replay safety, and cross-visitor isolation. An initial exchange attempt returned no proposal; a retry passed. These checks demonstrate integration, not a production success rate. See `verification/live-deployment.json`. The 20-scenario UI evaluation intentionally remains offline and incurs no model usage.
