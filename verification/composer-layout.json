@@ -1,0 +1,27 @@
+{
+  "url": "https://relay-support-agent-9jls.onrender.com",
+  "verifiedAt": "2026-11-06T23:13:36Z",
+  "sourceCommit": "d5e97fb3a3f6283c21b0f3f842ea61bb5e888739",
+  "deploymentId": "dep-dbn5tj4ipgvc738o0rng",
+  "checks": [
+    {
+      "asset": "/assets/index-CtGwo16f.js",
+      "sha256": "11cb15380132315faa967fa82bc884dd0d2ff5b2fe1c365f2b09ad9eab4d3c21",
+      "matchesLocalBuild": true
+    },
+    {
+      "asset": "/assets/index-DnZ9wX0n.css",
+      "sha256": "54416bc9e48ea1c902520a03e631951c5e74680268a14a0c2c27ee741372bacf",
+      "matchesLocalBuild": true
+    }
+  ],
+  "agentMode": "openai",
+  "model": "gpt-4.1-mini",
+  "bootstrapVerified": true,
+  "browserVisualQA": false,
+  "notes": [
+    "The hosted JavaScript and CSS match the local production build byte for byte.",
+    "Chat panel now uses a bounded header / scrollable content / composer grid; automatic scrolling targets the message container only.",
+    "Browser screenshot and interaction QA remain unverified because a supported browser tool was unavailable."
+  ]
+}
