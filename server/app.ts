@@ -47,24 +47,51 @@ export function createApp(
       database: db.dialect,
       model: mode === 'demo' ? 'deterministic-demo-v1' : process.env.OPENAI_MODEL || 'gpt-4.1-mini',
       llmConfigured: mode === 'openai' && Boolean(process.env.OPENAI_API_KEY),
+      revision: process.env.RENDER_GIT_COMMIT || null,
     }),
   );
   app.use(
     '/api',
     rateLimit({ windowMs: 60000, limit: 90, standardHeaders: 'draft-8', legacyHeaders: false }),
   );
+  function assertOrigin(req: express.Request) {
+    const origin = req.get('origin');
+    if (!['GET', 'HEAD', 'OPTIONS'].includes(req.method) && origin) {
+      const expected =
+        process.env.APP_ORIGIN ||
+        process.env.RENDER_EXTERNAL_URL ||
+        `${req.protocol}://${req.get('host')}`;
+      if (origin !== expected.replace(/\/$/, ''))
+        throw new AppError(403, 'ORIGIN_REJECTED', 'Cross-origin requests are not allowed.');
+    }
+  }
+  function issueSession(res: express.Response, tenant: string) {
+    const payload = `${tenant}.${Date.now() + 7 * 86400000}`;
+    res.cookie(
+      'relay_session',
+      `${payload}.${createHmac('sha256', secret).update(payload).digest('hex')}`,
+      {
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: process.env.COOKIE_SECURE === 'true',
+        maxAge: 7 * 86400000,
+        path: '/',
+      },
+    );
+  }
+  // Run remote checks in disposable signed accounts, separate from browser demo accounts.
+  app.post('/api/evaluation-fixtures', async (req, res) => {
+    assertOrigin(req);
+    z.object({}).strict().parse(req.body);
+    const tenant = `evaluation-${randomUUID()}`;
+    await seed(db, tenant);
+    issueSession(res, tenant);
+    res.status(201).json({ fixture: true });
+  });
   app.use('/api', async (req, res, next) => {
     try {
       // Browser cross-origin writes are rejected; scripts may use a valid cookie without Origin.
-      const origin = req.get('origin');
-      if (!['GET', 'HEAD', 'OPTIONS'].includes(req.method) && origin) {
-        const expected =
-          process.env.APP_ORIGIN ||
-          process.env.RENDER_EXTERNAL_URL ||
-          `${req.protocol}://${req.get('host')}`;
-        if (origin !== expected.replace(/\/$/, ''))
-          throw new AppError(403, 'ORIGIN_REJECTED', 'Cross-origin requests are not allowed.');
-      }
+      assertOrigin(req);
       let tenant = '';
       const raw = req.cookies.relay_session as string | undefined;
       if (raw) {
@@ -84,15 +111,7 @@ export function createApp(
       }
       if (!tenant) {
         tenant = randomUUID();
-        const payload = `${tenant}.${Date.now() + 7 * 86400000}`;
-        const value = `${payload}.${createHmac('sha256', secret).update(payload).digest('hex')}`;
-        res.cookie('relay_session', value, {
-          httpOnly: true,
-          sameSite: 'lax',
-          secure: process.env.COOKIE_SECURE === 'true',
-          maxAge: 7 * 86400000,
-          path: '/',
-        });
+        issueSession(res, tenant);
       }
       await seed(db, tenant);
       res.locals.tenant = tenant;
@@ -100,6 +119,31 @@ export function createApp(
     } catch (e) {
       next(e);
     }
+  });
+  app.delete('/api/evaluation-fixtures/current', async (_req, res) => {
+    const tenant = res.locals.tenant as string;
+    if (!tenant.startsWith('evaluation-'))
+      throw new AppError(
+        403,
+        'NOT_EVALUATION_FIXTURE',
+        'Only disposable evaluation accounts can be cleaned up.',
+      );
+    await db.transaction(async (tx) => {
+      for (const table of [
+        'messages',
+        'proposals',
+        'resolutions',
+        'tickets',
+        'conversations',
+        'inventory',
+        'orders',
+        'eval_runs',
+      ])
+        await tx.query(`DELETE FROM ${table} WHERE tenant=?`, [tenant]);
+      await tx.query('DELETE FROM tenants WHERE id=?', [tenant]);
+    });
+    res.clearCookie('relay_session', { path: '/' });
+    res.status(204).end();
   });
   app.get('/api/bootstrap', async (_req, res) => {
     const t = res.locals.tenant;

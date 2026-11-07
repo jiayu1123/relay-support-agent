@@ -16,7 +16,8 @@
     "smoke": "tsx scripts/smoke.ts",
     "setup": "node scripts/setup.mjs",
     "verify:live": "tsx scripts/verify-live.ts",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "eval:live": "tsx scripts/evaluate-live.ts"
   },
   "dependencies": {
     "cookie-parser": "^1.4.7",

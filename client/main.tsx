@@ -36,6 +36,7 @@ import { api } from './api';
 import './style.css';
 import './studio.css';
 import { Overview } from './Overview';
+import { LiveEvaluations } from './LiveEvaluations';
 
 type Message = { id: string; role: string; content: string; metadata: any; created_at: string };
 type Page = 'overview' | 'workspace' | 'orders' | 'knowledge' | 'evaluations' | 'architecture';
@@ -81,6 +82,7 @@ function App() {
     [search, setSearch] = useState(''),
     [report, setReport] = useState<any>(null),
     [evaluating, setEvaluating] = useState(false),
+    [evaluationMode, setEvaluationMode] = useState<'live' | 'demo'>('live'),
     [expanded, setExpanded] = useState<string | null>(null),
     [localProposals, setLocalProposals] = useState<Record<string, string>>({});
   const chatScroll = useRef<HTMLDivElement>(null);
@@ -924,106 +926,138 @@ function App() {
                   outcomes.
                 </p>
               </div>
-              <button className="primary" disabled={evaluating} onClick={runEval}>
-                {evaluating ? <Loader2 size={16} className="spin" /> : <FlaskConical size={16} />}{' '}
-                {evaluating ? 'Running scenarios…' : 'Run demo evaluation'}
+              {evaluationMode === 'demo' && (
+                <button className="primary" disabled={evaluating} onClick={runEval}>
+                  {evaluating ? <Loader2 size={16} className="spin" /> : <FlaskConical size={16} />}{' '}
+                  {evaluating ? 'Running scenarios…' : 'Run demo evaluation'}
+                </button>
+              )}
+            </div>
+            <div className="evaluation-tabs" role="tablist" aria-label="Evaluation mode">
+              <button
+                role="tab"
+                aria-selected={evaluationMode === 'live'}
+                className={evaluationMode === 'live' ? 'active' : ''}
+                onClick={() => setEvaluationMode('live')}
+              >
+                <Activity size={16} />
+                Live model baseline
+              </button>
+              <button
+                role="tab"
+                aria-selected={evaluationMode === 'demo'}
+                className={evaluationMode === 'demo' ? 'active' : ''}
+                onClick={() => setEvaluationMode('demo')}
+              >
+                <FlaskConical size={16} />
+                Offline regression
               </button>
             </div>
-            <div className="info-box eval-info">
-              <ShieldCheck size={20} />
-              <div>
-                <b>
-                  {report?.mode === 'openai' ? 'Live-model evaluation' : 'Offline regression suite'}
-                </b>
-                <p>
-                  20 authored scenarios cover workflows, policy boundaries, retrieval,
-                  authorization, multilingual requests, and confirmation. Demo results measure the
-                  deterministic engine, not LLM quality. Run live-model evaluations with the CLI
-                  after configuring a key.
-                </p>
-              </div>
-            </div>
-            {report ? (
-              <>
-                <div className="stats-row four">
-                  <Stat
-                    label="Scenarios passed"
-                    value={`${report.passed}/${report.total}`}
-                    sub={`${Math.round((report.passed / report.total) * 100)}% of this authored suite`}
-                  />
-                  <Stat
-                    label="Assertions checked"
-                    value={report.checks}
-                    sub="Tool calls + database state"
-                  />
-                  <Stat
-                    label="P95 turn latency"
-                    value={`${report.p95Ms} ms`}
-                    sub={`${report.mode} · local runtime`}
-                  />
-                  <Stat
-                    label="Model tokens"
-                    value={report.usage.inputTokens + report.usage.outputTokens}
-                    sub={
-                      report.mode === 'demo'
-                        ? 'No model calls or API cost'
-                        : 'Input + output tokens'
-                    }
-                  />
-                </div>
-                <div className="table-card">
-                  <div className="table-toolbar">
-                    <div>
-                      <h3>Latest run</h3>
-                      <small>
-                        {new Date(report.createdAt).toLocaleString()} · {report.model}
-                      </small>
-                    </div>
-                    <button className="secondary" onClick={exportReport}>
-                      <Download size={15} />
-                      Export JSON
-                    </button>
-                  </div>
-                  <div className="eval-results">
-                    {report.results.map((r: any, i: number) => (
-                      <div className="eval-result" key={i}>
-                        <button
-                          onClick={() => setExpanded(expanded === `eval-${i}` ? null : `eval-${i}`)}
-                        >
-                          {r.passed ? (
-                            <CheckCircle2 size={18} className="green-text" />
-                          ) : (
-                            <AlertCircle size={18} className="red-text" />
-                          )}
-                          <b>{r.name}</b>
-                          <span className="eval-category">{r.category}</span>
-                          <small>{r.latencyMs} ms</small>
-                          <ChevronDown size={15} />
-                        </button>
-                        {expanded === `eval-${i}` && (
-                          <div className="eval-detail">
-                            <p>
-                              <b>Customer:</b> {r.prompt}
-                            </p>
-                            <p>{r.text || r.error}</p>
-                            {r.checks.map((c: any, j: number) => (
-                              <div key={j} className={c.passed ? 'green-text' : 'red-text'}>
-                                {c.passed ? '✓' : '×'} {c.name}
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </>
+            {evaluationMode === 'live' ? (
+              <LiveEvaluations />
             ) : (
-              <Empty
-                icon={FlaskConical}
-                title="Your first baseline starts here."
-                text="Run the suite to measure real results. No scores are pre-filled."
-              />
+              <>
+                <div className="info-box eval-info">
+                  <ShieldCheck size={20} />
+                  <div>
+                    <b>
+                      {report?.mode === 'openai'
+                        ? 'Live-model evaluation'
+                        : 'Offline regression suite'}
+                    </b>
+                    <p>
+                      20 authored scenarios cover workflows, policy boundaries, retrieval,
+                      authorization, multilingual requests, and confirmation. Demo results measure
+                      the deterministic engine, not LLM quality. Select Live model baseline for the
+                      recorded real-model results and rerun instructions.
+                    </p>
+                  </div>
+                </div>
+                {report ? (
+                  <>
+                    <div className="stats-row four">
+                      <Stat
+                        label="Scenarios passed"
+                        value={`${report.passed}/${report.total}`}
+                        sub={`${Math.round((report.passed / report.total) * 100)}% of this authored suite`}
+                      />
+                      <Stat
+                        label="Assertions checked"
+                        value={report.checks}
+                        sub="Tool calls + database state"
+                      />
+                      <Stat
+                        label="P95 turn latency"
+                        value={`${report.p95Ms} ms`}
+                        sub={`${report.mode} · local runtime`}
+                      />
+                      <Stat
+                        label="Model tokens"
+                        value={report.usage.inputTokens + report.usage.outputTokens}
+                        sub={
+                          report.mode === 'demo'
+                            ? 'No model calls or API cost'
+                            : 'Input + output tokens'
+                        }
+                      />
+                    </div>
+                    <div className="table-card">
+                      <div className="table-toolbar">
+                        <div>
+                          <h3>Latest run</h3>
+                          <small>
+                            {new Date(report.createdAt).toLocaleString()} · {report.model}
+                          </small>
+                        </div>
+                        <button className="secondary" onClick={exportReport}>
+                          <Download size={15} />
+                          Export JSON
+                        </button>
+                      </div>
+                      <div className="eval-results">
+                        {report.results.map((r: any, i: number) => (
+                          <div className="eval-result" key={i}>
+                            <button
+                              onClick={() =>
+                                setExpanded(expanded === `eval-${i}` ? null : `eval-${i}`)
+                              }
+                            >
+                              {r.passed ? (
+                                <CheckCircle2 size={18} className="green-text" />
+                              ) : (
+                                <AlertCircle size={18} className="red-text" />
+                              )}
+                              <b>{r.name}</b>
+                              <span className="eval-category">{r.category}</span>
+                              <small>{r.latencyMs} ms</small>
+                              <ChevronDown size={15} />
+                            </button>
+                            {expanded === `eval-${i}` && (
+                              <div className="eval-detail">
+                                <p>
+                                  <b>Customer:</b> {r.prompt}
+                                </p>
+                                <p>{r.text || r.error}</p>
+                                {r.checks.map((c: any, j: number) => (
+                                  <div key={j} className={c.passed ? 'green-text' : 'red-text'}>
+                                    {c.passed ? '✓' : '×'} {c.name}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <Empty
+                    icon={FlaskConical}
+                    title="Your first baseline starts here."
+                    text="Run the suite to measure real results. No scores are pre-filled."
+                  />
+                )}{' '}
+              </>
             )}
           </section>
         ) : (
