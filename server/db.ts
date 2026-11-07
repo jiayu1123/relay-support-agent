@@ -95,6 +95,7 @@ export async function migrate(db: Store) {
     `CREATE TABLE IF NOT EXISTS orders (tenant TEXT NOT NULL, id TEXT NOT NULL, product TEXT NOT NULL, sku TEXT NOT NULL, amount INTEGER NOT NULL, delivered_at TEXT, status TEXT NOT NULL, category TEXT NOT NULL, PRIMARY KEY(tenant,id))`,
     'CREATE TABLE IF NOT EXISTS inventory (tenant TEXT NOT NULL, sku TEXT NOT NULL, stock INTEGER NOT NULL CHECK(stock >= 0), PRIMARY KEY(tenant,sku))',
     'CREATE TABLE IF NOT EXISTS conversations (id TEXT PRIMARY KEY, tenant TEXT NOT NULL, title TEXT NOT NULL, created_at TEXT NOT NULL)',
+    'CREATE TABLE IF NOT EXISTS conversation_states (tenant TEXT NOT NULL, conversation TEXT NOT NULL, state TEXT NOT NULL, PRIMARY KEY(tenant,conversation))',
     'CREATE TABLE IF NOT EXISTS messages (id TEXT PRIMARY KEY, tenant TEXT NOT NULL, conversation TEXT NOT NULL, role TEXT NOT NULL, content TEXT NOT NULL, metadata TEXT NOT NULL, created_at TEXT NOT NULL)',
     'CREATE INDEX IF NOT EXISTS messages_by_conversation ON messages(tenant,conversation,created_at)',
     'CREATE TABLE IF NOT EXISTS proposals (id TEXT PRIMARY KEY, tenant TEXT NOT NULL, conversation TEXT NOT NULL, order_id TEXT NOT NULL, action TEXT NOT NULL, reason TEXT NOT NULL, expires_at TEXT NOT NULL, status TEXT NOT NULL)',
@@ -102,6 +103,7 @@ export async function migrate(db: Store) {
     'CREATE TABLE IF NOT EXISTS tickets (id TEXT PRIMARY KEY, tenant TEXT NOT NULL, conversation TEXT NOT NULL, summary TEXT NOT NULL, created_at TEXT NOT NULL)',
     'CREATE TABLE IF NOT EXISTS eval_runs (id TEXT PRIMARY KEY, tenant TEXT NOT NULL, report TEXT NOT NULL, created_at TEXT NOT NULL)',
     'INSERT INTO schema_version(version) VALUES(1) ON CONFLICT(version) DO NOTHING',
+    'INSERT INTO schema_version(version) VALUES(2) ON CONFLICT(version) DO NOTHING',
   ];
   await db.transaction(async (tx) => {
     for (const sql of statements) await tx.query(sql);

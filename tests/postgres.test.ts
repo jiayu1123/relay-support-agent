@@ -55,3 +55,75 @@ it.skipIf(!process.env.TEST_DATABASE_URL)(
     }
   },
 );
+
+it.skipIf(!process.env.TEST_DATABASE_URL)(
+  'PostgreSQL: conversation state serializes turns and persists confirmed outcomes',
+  async () => {
+    const { runAgent } = await import('../server/agent.js');
+    const { beginConversationTurn, finishConversationTurn, getConversationState } =
+      await import('../server/conversation-state.js');
+    const db = await connect(process.env.TEST_DATABASE_URL);
+    const tenant = `pg-state-${randomUUID()}`,
+      conversation = randomUUID();
+    const ctx = { db, tenant, conversation, traces: [] };
+    try {
+      await migrate(db);
+      await seed(db, tenant);
+      await db.query('INSERT INTO conversations(id,tenant,title,created_at) VALUES(?,?,?,?)', [
+        conversation,
+        tenant,
+        'State',
+        new Date().toISOString(),
+      ]);
+      await runAgent(
+        ctx,
+        [{ role: 'user', content: 'My headphones are broken. I need an exchange.' }],
+        { mode: 'demo' },
+      );
+      const first = await runAgent({ ...ctx, traces: [] }, [{ role: 'user', content: 'RL-1042' }], {
+        mode: 'demo',
+      });
+      expect(first.proposal.order_id).toBe('RL-1042');
+      const races = await Promise.allSettled([
+        beginConversationTurn(db, ctx, [{ role: 'user', content: 'Please refund it instead.' }]),
+        beginConversationTurn(db, ctx, [{ role: 'user', content: 'Please refund it instead.' }]),
+      ]);
+      expect(races.filter((r) => r.status === 'fulfilled')).toHaveLength(1);
+      const active = (races.find((r) => r.status === 'fulfilled') as PromiseFulfilledResult<any>)
+        .value.state;
+      await expect(confirmResolution(db, tenant, first.proposal.id)).rejects.toMatchObject({
+        code: 'TURN_IN_PROGRESS',
+      });
+      await finishConversationTurn(db, ctx, active);
+      const next = await runAgent(
+        { ...ctx, traces: [] },
+        [{ role: 'user', content: 'Please refund it.' }],
+        { mode: 'demo' },
+      );
+      const confirmed = await confirmResolution(db, tenant, next.proposal.id);
+      expect(await getConversationState(db, ctx)).toMatchObject({
+        stage: 'resolved',
+        resolutionId: confirmed.id,
+      });
+      expect((await confirmResolution(db, tenant, next.proposal.id)).replayed).toBe(true);
+    } finally {
+      await db.transaction(async (tx) => {
+        for (const table of [
+          'conversation_states',
+          'messages',
+          'tickets',
+          'proposals',
+          'resolutions',
+          'conversations',
+          'inventory',
+          'orders',
+          'tenants',
+        ])
+          await tx.query(`DELETE FROM ${table} WHERE ${table === 'tenants' ? 'id' : 'tenant'}=?`, [
+            tenant,
+          ]);
+      });
+      await db.close();
+    }
+  },
+);

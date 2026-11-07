@@ -1,3 +1,4 @@
+import { hasDefectEvidence } from './conversation-state.js';
 export const policies = [
   {
     id: 'RET-01',
@@ -81,8 +82,7 @@ export function eligible(
       code: 'OUTSIDE_WINDOW',
       message: 'This order is outside the 30-day window. A specialist can review your request.',
     };
-  const defective =
-    /defect|broken|damag|fault|no sound|not work|stopped work|坏|损|故障|声音/i.test(reason);
+  const defective = hasDefectEvidence(reason);
   if (action === 'exchange' && !defective)
     return {
       allowed: false,

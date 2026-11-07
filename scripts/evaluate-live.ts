@@ -1,5 +1,6 @@
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
+import { LIVE_STATE_CASES } from '../server/live-state-cases.js';
 import { evaluateLiveRemote } from '../server/live-evaluation.js';
 
 const arg = (name: string) =>
@@ -15,7 +16,10 @@ const repeats = Number(arg('repeats') || 1),
 console.log(
   `Starting live evaluation against ${new URL(url).origin}. Model usage is billed to that service’s configured API project.`,
 );
+const suite = arg('suite') || 'core';
+if (!['core', 'state'].includes(suite)) throw new Error('Use --suite=core or --suite=state.');
 const report = await evaluateLiveRemote(url, {
+  ...(suite === 'state' ? { cases: LIVE_STATE_CASES, suiteVersion: 'relay-state-v1' } : {}),
   repeats,
   onCase: (r, n, total) =>
     console.log(

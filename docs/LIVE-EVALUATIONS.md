@@ -21,6 +21,8 @@ npm run build
 
 Review the entire report, including failures, before committing and deploying it. Do not edit scores by hand or silently drop failed cases. The public website displays the report; it does not offer a button that lets arbitrary visitors launch a paid batch.
 
+Use `--suite=state` for the six-case structured-state suite; it checks intermediate saved slots and cancelled-proposal rejection. See [state design](CONVERSATION-STATE.md). The default is `--suite=core` (20 cases).
+
 Use `--repeats=2` or `--repeats=3` for repeatability checks. Each repetition runs all 20 cases again. The default is one run per case. The runner limits batches to 20 cases and at most three repetitions, spaces requests to avoid the app's rate limit, and stops before new cases if its time budget is exhausted. It stops after two consecutive request errors and preserves partial results. It does not retry writes.
 
 In managed environments that require the inherited proxy, run Node with `NODE_USE_ENV_PROXY=1`; preserve the supplied HTTPS proxy and CA settings. Do not disable certificate checks.

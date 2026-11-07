@@ -1,4 +1,5 @@
 import { createHash, randomUUID } from 'node:crypto';
+import type { ConversationState } from './conversation-state.js';
 
 export type LiveCase = {
   id: string;
@@ -15,6 +16,9 @@ export type LiveCase = {
   firstClarification?: boolean;
   supersedes?: boolean;
   isolationProbe?: boolean;
+  states?: { turn: number; expected: Partial<ConversationState> }[];
+  rejectInitialProposal?: boolean;
+  sameProposal?: boolean;
 };
 export const LIVE_CASES: LiveCase[] = [
   {
@@ -224,6 +228,7 @@ export type LiveCheck = {
   observed?: unknown;
 };
 export type LiveTurn = {
+  state?: ConversationState;
   prompt: string;
   text: string;
   proposal: any;
@@ -272,6 +277,27 @@ export function gradeLiveOutcome(s: LiveCase, turns: LiveTurn[], state: any): Li
     expected?: unknown,
     observed?: unknown,
   ) => checks.push({ name, dimension, passed, expected, observed });
+  for (const contract of s.states || []) {
+    const actual = turns[contract.turn - 1]?.state;
+    const matches = (expected: any, observed: any): boolean =>
+      expected && typeof expected === 'object'
+        ? observed != null &&
+          Object.entries(expected).every(([key, value]) => matches(value, observed[key]))
+        : expected === observed;
+    add(
+      `Structured state contract (turn ${contract.turn})`,
+      'task',
+      matches(contract.expected, actual),
+      contract.expected,
+      actual,
+    );
+  }
+  if (s.sameProposal)
+    add(
+      'Written confirmation retains the original pending proposal',
+      'confirmation',
+      !!turns[0]?.proposal && turns.at(-1)?.state?.pendingProposal?.id === turns[0].proposal.id,
+    );
   if (s.outcome === 'proposal')
     add(
       'Correct order and action proposed',
@@ -352,6 +378,7 @@ export function gradeLiveOutcome(s: LiveCase, turns: LiveTurn[], state: any): Li
 
 type Options = {
   cases?: LiveCase[];
+  suiteVersion?: string;
   repeats?: number;
   minRequestIntervalMs?: number;
   maxDurationMs?: number;
@@ -468,6 +495,7 @@ export async function evaluateLiveRemote(baseUrl: string, options: Options = {})
           const m = r.assistant.metadata;
           result.turns.push({
             prompt,
+            state: m.state,
             text: r.assistant.content,
             proposal: m.proposal,
             traces: safeOutput(m.traces || []),
@@ -491,6 +519,18 @@ export async function evaluateLiveRemote(baseUrl: string, options: Options = {})
         }
         result.checks.push(...gradeLiveOutcome(s, result.turns, state));
         const p = result.turns.at(-1)?.proposal;
+        if (s.rejectInitialProposal) {
+          const initial = result.turns[0]?.proposal;
+          const rejected = initial
+            ? await actor.request(`/proposals/${initial.id}/confirm`, { confirmed: true })
+            : null;
+          result.checks.push({
+            name: 'Cancelled proposal cannot be confirmed',
+            dimension: 'confirmation',
+            passed: rejected?.status === 409,
+          });
+        }
+
         if (
           s.supersedes &&
           result.turns[0]?.proposal &&
@@ -635,8 +675,8 @@ export async function evaluateLiveRemote(baseUrl: string, options: Options = {})
     .filter((b) => b.scenarios > 0);
   return {
     id: randomUUID(),
-    suiteVersion: 'relay-live-v1',
-    graderVersion: 'contracts-v1',
+    suiteVersion: options.suiteVersion || 'relay-live-v1',
+    graderVersion: 'contracts-v2',
     suiteHash: createHash('sha256').update(JSON.stringify(cases)).digest('hex'),
     mode: 'openai',
     status: abortReason ? 'incomplete' : !revisionStable ? 'invalidated' : 'completed',

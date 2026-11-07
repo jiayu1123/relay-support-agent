@@ -37,6 +37,8 @@ import './style.css';
 import './studio.css';
 import { Overview } from './Overview';
 import { LiveEvaluations } from './LiveEvaluations';
+import { ConversationStateCard } from './ConversationStateCard';
+import type { ConversationState } from '../server/conversation-state';
 
 type Message = { id: string; role: string; content: string; metadata: any; created_at: string };
 type Page = 'overview' | 'workspace' | 'orders' | 'knowledge' | 'evaluations' | 'architecture';
@@ -75,6 +77,7 @@ function App() {
     [page, setPage] = useState<Page>('overview'),
     [conversation, setConversation] = useState<string | null>(null),
     [messages, setMessages] = useState<Message[]>([]),
+    [conversationState, setConversationState] = useState<ConversationState | null>(null),
     [input, setInput] = useState(''),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(''),
@@ -113,6 +116,7 @@ function App() {
       const d = await api(`/conversations/${id}`);
       setConversation(id);
       setMessages(d.messages);
+      setConversationState(d.state);
       setPage('workspace');
     } catch (e) {
       setError((e as Error).message);
@@ -121,6 +125,7 @@ function App() {
   function fresh() {
     if (busy) return;
     setConversation(null);
+    setConversationState(null);
     setMessages([]);
     setInput('');
     setError('');
@@ -133,6 +138,7 @@ function App() {
     setError('');
     setPage('workspace');
     let optimistic = '';
+    let activeId = conversation;
     try {
       let id = conversation;
       if (!id) {
@@ -140,6 +146,7 @@ function App() {
         id = c.id;
         setConversation(id);
       }
+      activeId = id;
       optimistic = `temp-${Date.now()}`;
       setMessages((m) => [
         ...m,
@@ -153,11 +160,21 @@ function App() {
       ]);
       const r = await api(`/conversations/${id}/messages`, { content: text });
       setMessages((m) => [...m.filter((x) => x.id !== optimistic), r.user, r.assistant]);
+      const persisted = await api(`/conversations/${id}`);
+      setMessages(persisted.messages);
+      setConversationState(persisted.state);
       await refresh();
     } catch (e) {
       setMessages((m) => m.filter((x) => x.id !== optimistic));
       setInput(text);
       setError((e as Error).message);
+      if (activeId) {
+        const persisted = await api(`/conversations/${activeId}`).catch(() => null);
+        if (persisted) {
+          setMessages(persisted.messages);
+          setConversationState(persisted.state);
+        }
+      }
     } finally {
       setBusy(false);
     }
@@ -172,6 +189,7 @@ function App() {
       if (conversation) {
         const d = await api(`/conversations/${conversation}`);
         setMessages(d.messages);
+        setConversationState(d.state);
       }
       await refresh();
     } catch (e) {
@@ -181,12 +199,21 @@ function App() {
     }
   }
   async function cancel(id: string) {
+    if (busy) return;
+    setBusy(true);
     setError('');
     try {
       await api(`/proposals/${id}/cancel`, {});
       setLocalProposals((p) => ({ ...p, [id]: 'cancelled' }));
+      if (conversation) {
+        const persisted = await api(`/conversations/${conversation}`);
+        setMessages(persisted.messages);
+        setConversationState(persisted.state);
+      }
     } catch (e) {
       setError((e as Error).message);
+    } finally {
+      setBusy(false);
     }
   }
   async function runEval() {
@@ -666,6 +693,7 @@ function App() {
                   </>
                 ) : (
                   <div className="trace-panel">
+                    <ConversationStateCard state={conversationState} />
                     <div className="trace-intro">
                       <Activity size={20} />
                       <h3>Every step, visible.</h3>

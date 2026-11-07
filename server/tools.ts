@@ -3,15 +3,16 @@ import { z } from 'zod';
 import type { SQL, Store } from './db.js';
 import { eligible, retrieve } from './policy.js';
 
-export class AppError extends Error {
-  constructor(
-    public status: number,
-    public code: string,
-    message: string,
-  ) {
-    super(message);
-  }
-}
+import { AppError } from './errors.js';
+export { AppError } from './errors.js';
+import {
+  lockConversation,
+  readState,
+  writeState,
+  observeTool,
+  type ConversationState,
+} from './conversation-state.js';
+
 export type Trace = {
   id: string;
   tool: string;
@@ -21,7 +22,13 @@ export type Trace = {
   status: 'ok' | 'error';
   attempts: number;
 };
-export type Context = { db: Store; tenant: string; conversation: string; traces: Trace[] };
+export type Context = {
+  db: Store;
+  tenant: string;
+  conversation: string;
+  traces: Trace[];
+  state?: ConversationState;
+};
 const orderSchema = z.object({ orderId: z.string().min(1).max(30) });
 const actionSchema = orderSchema.extend({
   action: z.enum(['exchange', 'refund']),
@@ -134,6 +141,28 @@ export async function executeTool(ctx: Context, name: string, input: unknown): P
     } else if (name === 'propose_resolution') {
       const a = actionSchema.strict().parse(input);
       output = await ctx.db.transaction(async (tx) => {
+        await lockConversation(tx, ctx.db, ctx);
+        if (ctx.state) {
+          const current = await readState(tx, ctx);
+          if (!current?.processing || current.revision !== ctx.state.revision)
+            throw new AppError(
+              409,
+              'STATE_CHANGED',
+              'Conversation state changed; reload before retrying.',
+            );
+          if (
+            ctx.state.turnKind !== 'task' ||
+            ctx.state.intent !== a.action ||
+            ctx.state.orderId !== a.orderId
+          )
+            throw new AppError(
+              409,
+              'STATE_MISMATCH',
+              'Ask the customer to identify one order and action before preparing a proposal.',
+            );
+          // Eligibility must use customer-reported evidence, never a model-invented defect.
+          a.reason = ctx.state.issue || `Customer requested ${a.action}.`;
+        }
         const order = await ownedOrder(tx, ctx.tenant, a.orderId);
         const policy = eligible(order, a.action, a.reason);
         if (!policy.allowed) return policy;
@@ -147,6 +176,19 @@ export async function executeTool(ctx: Context, name: string, input: unknown): P
               allowed: false,
               code: 'OUT_OF_STOCK',
               message: 'Replacement is out of stock. Offer a refund request or specialist review.',
+            };
+        }
+        if (ctx.state?.pendingProposal) {
+          const [existing] = await tx.query(
+            "SELECT * FROM proposals WHERE tenant=? AND conversation=? AND id=? AND status='pending'",
+            [ctx.tenant, ctx.conversation, ctx.state.pendingProposal.id],
+          );
+          if (existing && Date.parse(existing.expires_at) > Date.now())
+            return {
+              allowed: true,
+              proposal: { ...existing, amount: order.amount, product: order.product },
+              policyId: a.action === 'exchange' ? 'EXC-02' : 'RET-01',
+              message: 'Existing proposal reused. Customer must click Confirm in the application.',
             };
         }
         // One pending proposal per conversation. A new proposal invalidates older confirmations.
@@ -191,10 +233,26 @@ export async function executeTool(ctx: Context, name: string, input: unknown): P
         .strict()
         .parse(input);
       const id = `TKT-${randomUUID().slice(0, 8).toUpperCase()}`;
-      await ctx.db.query(
-        'INSERT INTO tickets(id,tenant,conversation,summary,created_at) VALUES(?,?,?,?,?)',
-        [id, ctx.tenant, ctx.conversation, a.summary, new Date().toISOString()],
-      );
+      await ctx.db.transaction(async (tx) => {
+        await lockConversation(tx, ctx.db, ctx);
+        if (ctx.state) {
+          const current = await readState(tx, ctx);
+          if (!current?.processing || current.revision !== ctx.state.revision)
+            throw new AppError(
+              409,
+              'STATE_CHANGED',
+              'Conversation state changed; reload before retrying.',
+            );
+        }
+        await tx.query(
+          'INSERT INTO tickets(id,tenant,conversation,summary,created_at) VALUES(?,?,?,?,?)',
+          [id, ctx.tenant, ctx.conversation, a.summary, new Date().toISOString()],
+        );
+        await tx.query(
+          "UPDATE proposals SET status='superseded' WHERE tenant=? AND conversation=? AND status='pending'",
+          [ctx.tenant, ctx.conversation],
+        );
+      });
       output = {
         ticketId: id,
         summary: a.summary,
@@ -219,6 +277,7 @@ export async function executeTool(ctx: Context, name: string, input: unknown): P
             : 'Tool failed. Please retry or ask for a specialist.',
     };
   }
+  if (ctx.state) observeTool(ctx.state, name, input, output);
   ctx.traces.push({
     id: randomUUID(),
     tool: name,
@@ -248,6 +307,13 @@ export async function confirmResolution(
   proposalId: string,
 ): Promise<Resolution> {
   return db.transaction(async (tx) => {
+    const [pointer] = await tx.query('SELECT conversation FROM proposals WHERE id=? AND tenant=?', [
+      proposalId,
+      tenant,
+    ]);
+    if (!pointer) throw new AppError(404, 'NOT_FOUND', 'Proposal not found.');
+    const key = { tenant, conversation: pointer.conversation };
+    await lockConversation(tx, db, key);
     const lock = db.dialect === 'postgres' ? ' FOR UPDATE' : '';
     const [p] = await tx.query('SELECT * FROM proposals WHERE id=? AND tenant=?' + lock, [
       proposalId,
@@ -260,6 +326,15 @@ export async function confirmResolution(
       [proposalId, tenant],
     );
     if (existing) return { ...existing, replayed: true };
+    const state = await readState(tx, key);
+    if (state?.processing)
+      throw new AppError(409, 'TURN_IN_PROGRESS', 'Wait for the current reply before confirming.');
+    if (state && state.pendingProposal?.id !== proposalId)
+      throw new AppError(
+        409,
+        'STALE_PROPOSAL',
+        'This proposal no longer matches the conversation.',
+      );
     if (p.status !== 'pending')
       throw new AppError(
         409,
@@ -304,6 +379,13 @@ export async function confirmResolution(
       order.id,
     ]);
     await tx.query("UPDATE proposals SET status='confirmed' WHERE id=?", [p.id]);
+    if (state) {
+      state.stage = 'resolved';
+      state.resolutionId = resolution.id;
+      state.pendingProposal = null;
+      state.missingSlots = [];
+      await writeState(tx, key, state);
+    }
     return { ...resolution, replayed: false };
   });
 }

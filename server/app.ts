@@ -9,6 +9,12 @@ import type { Store } from './db.js';
 import { seed } from './db.js';
 import { AppError, confirmResolution, ownedConversation, type Context } from './tools.js';
 import { runAgent, type Turn } from './agent.js';
+import {
+  getConversationState,
+  lockConversation,
+  readState,
+  writeState,
+} from './conversation-state.js';
 import { policies } from './policy.js';
 import { evaluate } from './evaluation.js';
 
@@ -48,6 +54,7 @@ export function createApp(
       model: mode === 'demo' ? 'deterministic-demo-v1' : process.env.OPENAI_MODEL || 'gpt-4.1-mini',
       llmConfigured: mode === 'openai' && Boolean(process.env.OPENAI_API_KEY),
       revision: process.env.RENDER_GIT_COMMIT || null,
+      conversationStateVersion: 1,
     }),
   );
   app.use(
@@ -130,6 +137,7 @@ export function createApp(
       );
     await db.transaction(async (tx) => {
       for (const table of [
+        'conversation_states',
         'messages',
         'proposals',
         'resolutions',
@@ -206,7 +214,12 @@ export function createApp(
       'SELECT id,status FROM proposals WHERE tenant=? AND conversation=?',
       [res.locals.tenant, req.params.id],
     );
+    const state = await getConversationState(db, {
+      tenant: res.locals.tenant,
+      conversation: String(req.params.id),
+    });
     res.json({
+      state,
       messages: messages.map((m) => {
         const metadata = JSON.parse(m.metadata);
         if (metadata.proposal) {
@@ -305,11 +318,36 @@ export function createApp(
     res.json(resolution);
   });
   app.post('/api/proposals/:id/cancel', async (req, res) => {
-    const p = await db.query(
-      "UPDATE proposals SET status='cancelled' WHERE id=? AND tenant=? AND status='pending' RETURNING id",
-      [req.params.id, res.locals.tenant],
-    );
-    if (!p.length) throw new AppError(409, 'STALE_PROPOSAL', 'This proposal is no longer pending.');
+    const tenant = res.locals.tenant;
+    await db.transaction(async (tx) => {
+      const [pointer] = await tx.query(
+        'SELECT conversation FROM proposals WHERE id=? AND tenant=?',
+        [req.params.id, tenant],
+      );
+      if (!pointer) throw new AppError(404, 'NOT_FOUND', 'Proposal not found.');
+      const key = { tenant, conversation: pointer.conversation };
+      await lockConversation(tx, db, key);
+      const state = await readState(tx, key);
+      if (state?.processing)
+        throw new AppError(
+          409,
+          'TURN_IN_PROGRESS',
+          'Wait for the current reply before cancelling.',
+        );
+      const p = await tx.query(
+        "UPDATE proposals SET status='cancelled' WHERE id=? AND tenant=? AND status='pending' RETURNING id",
+        [req.params.id, tenant],
+      );
+      if (!p.length)
+        throw new AppError(409, 'STALE_PROPOSAL', 'This proposal is no longer pending.');
+      if (state?.pendingProposal?.id === req.params.id) {
+        state.pendingProposal = null;
+        state.stage = 'cancelled';
+        state.intent = null;
+        state.missingSlots = [];
+        await writeState(tx, key, state);
+      }
+    });
     res.json({ cancelled: true });
   });
   app.post('/api/evaluations', async (_req, res) => {

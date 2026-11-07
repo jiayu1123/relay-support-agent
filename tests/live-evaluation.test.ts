@@ -162,3 +162,20 @@ it('does not claim cleanup after an interrupted write whose server outcome is un
   expect(report.breakdown.cleanup.passed).toBe(0);
   expect(report.usage.complete).toBe(false);
 });
+
+it('grades structured state evidence rather than accepting a plausible final answer', () => {
+  const s = {
+    ...LIVE_CASES[0],
+    states: [
+      { turn: 1, expected: { stage: 'awaiting_confirmation' as const, orderId: 'RL-1042' } },
+    ],
+  };
+  const absent = gradeLiveOutcome(s, [turn()], { tickets: [] });
+  expect(absent.find((c) => c.name.startsWith('Structured state'))?.passed).toBe(false);
+  const present = gradeLiveOutcome(
+    s,
+    [turn({ state: { stage: 'awaiting_confirmation', orderId: 'RL-1042' } as any })],
+    { tickets: [] },
+  );
+  expect(present.find((c) => c.name.startsWith('Structured state'))?.passed).toBe(true);
+});

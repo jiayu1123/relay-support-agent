@@ -261,6 +261,7 @@ export async function evaluate(db: Store, owner: string, mode = 'demo') {
     } finally {
       await db.transaction(async (tx) => {
         for (const table of [
+          'conversation_states',
           'messages',
           'proposals',
           'resolutions',

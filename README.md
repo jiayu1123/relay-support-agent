@@ -39,10 +39,10 @@ The light Studio UI includes top navigation, an account overview, conversation h
 
 ## What works
 
-- Responsive React/TypeScript support workspace with persisted conversations.
+- Responsive React/TypeScript support workspace with persisted conversations and inspectable structured session state.
 - Six sample orders covering eligible, expired, in-transit, personalized, and out-of-stock situations.
 - Order lookup, policy retrieval, inventory checks, expiring proposals, explicit confirmation, and internal support tickets.
-- Server-side ownership checks and strict Zod validation of model tool arguments.
+- Server-side ownership checks, strict Zod tool validation, and active order/intent constraints backed by stored customer evidence.
 - Atomic inventory reservation, one resolution per order, and replay-safe confirmation.
 - Execution traces showing tool inputs, outputs, timing, and errors.
 - A policy knowledge base with TF-IDF retrieval, bilingual keyword matching, and source IDs.
@@ -71,6 +71,10 @@ Never commit `.env` or enter keys in browser code. The app does not ask visitors
 6. Ask for a **human specialist**. Inspect the internal ticket, then run the offline regression suite in **Evaluations**.
 
 Other scenarios: refund `RL-1043`, out-of-window `RL-1031`, undelivered `RL-1050`, final-sale `RL-1020`, or Chinese exchange requests.
+
+## Structured conversation state
+
+Relay saves the active order, intent, reported issue, missing information, pending proposal, and workflow stage independently of chat history. Switching orders clears old defect evidence; cancelling or changing the task immediately revokes the old confirmation card. Open **Playground → Execution trace → Conversation state** to inspect current slots. See [state design and multi-turn demo](docs/CONVERSATION-STATE.md).
 
 ## Architecture
 
@@ -135,6 +139,7 @@ Open http://localhost:3001. PostgreSQL persists in a named volume. Credentials a
 client/main.tsx       Workspace, orders, policy library, evaluations
 client/style.css      Responsive visual system
 server/agent.ts       System prompt, real-model loop, offline engine
+server/conversation-state.ts  Versioned slots, transitions, persistence, recovery
 server/tools.ts       Tool schemas, authorization, proposals, confirmations
 server/policy.ts      Policy corpus, retrieval, eligibility rules
 server/db.ts          Database adapters and initial schema
