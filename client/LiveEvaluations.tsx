@@ -144,6 +144,13 @@ export function LiveEvaluations() {
                 )
                 .join(' · ')}
             </p>
+            <a
+              href="https://github.com/jiayu1123/relay-support-agent/blob/main/docs/LIVE-BASELINE.md"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Recorded failure analysis
+            </a>
             {baseline.abortReason && <p>{baseline.abortReason}</p>}
             {!baseline.revisionStable && (
               <p>

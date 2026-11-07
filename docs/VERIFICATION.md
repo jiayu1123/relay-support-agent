@@ -1,6 +1,6 @@
 # Verification record
 
-Verified in the authoring environment on 2026-11-06 with Node.js 24.22.1.
+Historical checks below were recorded on 2026-11-06. Current live-evaluation and browser checks are recorded in the latest section at the end. Node.js 24.22.1.
 
 | Check                                       | Observed result                                                                                  |
 | ------------------------------------------- | ------------------------------------------------------------------------------------------------ |
@@ -11,9 +11,9 @@ Verified in the authoring environment on 2026-11-06 with Node.js 24.22.1.
 | Offline authored agent scenarios            | 20 / 20 passed, 79 assertions                                                                    |
 | Built HTTP smoke check                      | HTML, 2 built assets, health endpoint, and unknown-API 404 passed                                |
 | Live OpenAI calls                           | Verified on Render with gpt-4.1-mini; exchange + expired-return workflow checks; see live report |
-| Browser visual / interaction QA             | Not verified: supported browser-control tool unavailable                                         |
+| Browser visual / interaction QA             | Subsequently verified with Playwright + Chromium; see latest section below                       |
 | Docker build + running container            | Passed: health, static UI, tool workflow, confirmation, idempotent retry                         |
-| Public deployment                           | Passed on Render: https://relay-support-agent-9jls.onrender.com (offline demo mode)              |
+| Public deployment                           | Passed on Render: https://relay-support-agent-9jls.onrender.com (now OpenAI mode)                |
 
 The core tests include an OpenAI-compatible **mock** to verify the multi-step tool protocol and usage accounting. This is not proof of real model behavior. The offline suite uses deterministic intent routing with the same real tools and database constraints as live mode. Its passing results are regression evidence for this demo, not an LLM benchmark.
 
@@ -42,3 +42,11 @@ CI passed 38 tests, the 20-scenario offline suite, and the production build. Ren
 ## Composer visibility fix
 
 Source `d5e97fb3a3f6283c21b0f3f842ea61bb5e888739` fixes the playground grid’s automatic minimum sizing, anchors the composer in its own row, and limits automatic scrolling to the message container. The content region can shrink and scroll independently on short viewports. Render deployment `dep-dbn5tj4ipgvc738o0rng` is live; CI, production build, and HTTP smoke checks passed. Hosted frontend assets match the verified local build, bootstrap succeeds, and OpenAI configuration is preserved. Browser visual verification remains pending because no supported browser tool was available. See `verification/composer-layout.json`.
+
+## Hosted LLM evaluation expansion — 2026-11-07
+
+Feature revision `2ac99009c9555d2e4b768b04aaac8166e92cdec7` passed GitHub CI with **47 tests**, including PostgreSQL integration, the unchanged **20/20 offline suite (79 assertions)**, and the production build. It went live in Render deployment `dep-dbnbcp2jnfac73bth4e0` before the hosted-model run.
+
+The actual HTTP evaluation completed **20 cases / 23 model turns** with `gpt-4.1-mini`: **18/20 task outcomes**, **18/20 all-contract scenarios**, **131/134 individual contracts**, **24/24 safety**, **9/9 confirmation/replay**, and **20/20 fixture cleanup**. P50/P95 agent-turn latency was **1,457/2,199 ms**; observed usage was **42,019 input + 1,948 output tokens**. Failures were retained without retries. Source/model stability and complete usage were observed. See [baseline evidence](../verification/live-baseline.json) and [failure analysis](LIVE-BASELINE.md).
+
+Playwright with headless Chromium verified the built app at desktop 1440×900 and mobile 390×844: live/offline tab separation, offline evaluation execution, live failure/category filters, expanded contract/tool evidence, JSON download, visible playground composer, contained message scrolling, no mobile horizontal overflow, and no browser runtime errors. These browser checks supersede the earlier tool-unavailability notes, which describe historical verification limits.

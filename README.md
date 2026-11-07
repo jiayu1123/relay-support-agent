@@ -46,7 +46,7 @@ The light Studio UI includes top navigation, an account overview, conversation h
 - Atomic inventory reservation, one resolution per order, and replay-safe confirmation.
 - Execution traces showing tool inputs, outputs, timing, and errors.
 - A policy knowledge base with TF-IDF retrieval, bilingual keyword matching, and source IDs.
-- A 20-scenario agent regression suite with structured assertions and exportable JSON results.
+- Separate 20-scenario offline regression and real hosted-LLM evaluation suites, with contract checks, retained failures, observed token usage, and exportable reports.
 - OpenAI Chat Completions tool-calling adapter with bounded steps, SDK retries, timeout, and token usage.
 - SQLite and PostgreSQL adapters, Docker Compose, and GitHub Actions CI configuration.
 
@@ -109,13 +109,15 @@ TEST_DATABASE_URL=postgresql://user:password@localhost:5432/relay_test npm test
 
 The PostgreSQL test is skipped when `TEST_DATABASE_URL` is absent. GitHub Actions configures a PostgreSQL service and runs it. Windows PowerShell sets the environment variable with `$env:TEST_DATABASE_URL="..."` first.
 
-For **paid live-model evaluations**, explicitly opt in:
+For **paid evaluation of the deployed LLM**, use the hosted API runner. The API key stays on the server:
 
 ```bash
-npm run eval -- --mode=openai
+npm run eval:live -- --base-url=https://relay-support-agent-9jls.onrender.com --confirm-paid --output=verification/live-baseline.json
 ```
 
-Reports are written to `data/evaluation-demo.json` or `data/evaluation-openai.json`. Assertions check expected tools, policy codes, proposals, no mutation before confirmation, persisted order states, and idempotent retries. These are authored portfolio scenarios, not an industry benchmark or a production success rate. Demo latency excludes model/network latency. No dollar-cost estimate is invented; actual live input/output token counts are recorded.
+Open **Insights → Live model baseline** to inspect the recorded report, failure checks, tool evidence, token usage, and agent-turn latency. **Offline regression** remains separate and costs no model tokens. Public visitors cannot launch a paid evaluation batch. See [live evaluation methodology](docs/LIVE-EVALUATIONS.md) for fixtures, grading, provenance, and limitations.
+
+The older in-process runner (`npm run eval -- --mode=openai`) remains available for local development with a local API key. Neither suite is an industry benchmark or a production success rate.
 
 ## PostgreSQL and Docker
 
@@ -153,4 +155,6 @@ For a short, explicitly paid real-model integration check after configuring your
 
 ## Live-model verification
 
-The hosted OpenAI adapter was verified with an eligible exchange and an out-of-window return request. Checks covered actual token usage, tool execution, no order mutation before confirmation, atomic confirmation, replay safety, and cross-visitor isolation. An initial exchange attempt returned no proposal; a retry passed. These checks demonstrate integration, not a production success rate. See `verification/live-deployment.json`. The 20-scenario UI evaluation intentionally remains offline and incurs no model usage.
+The first expanded hosted baseline passed **18/20 authored scenarios** (24/24 safety checks; 9/9 confirmation checks). The two failures are preserved and explained in [baseline analysis](docs/LIVE-BASELINE.md). These are single-run results, not a production success rate.
+
+The hosted OpenAI adapter has been verified with actual model responses, nonzero usage, tool execution, explicit confirmation, persisted outcomes, replay safety, and visitor isolation. The expanded live suite now exercises 20 authored scenarios through the hosted HTTP API, including multilingual requests, policy boundaries, clarification, handoff, prompt override, and multi-turn order corrections. Its saved baseline and detailed failures appear separately from offline regression in Insights. See [the report](verification/live-baseline.json) and [methodology](docs/LIVE-EVALUATIONS.md).

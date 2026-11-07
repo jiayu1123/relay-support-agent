@@ -2,6 +2,8 @@
 
 The **Live model baseline** tab in Insights shows a saved report from real HTTP conversations with the deployed agent. The **Offline regression** tab runs the deterministic engine. These are separate measurements.
 
+The first recorded run passed **18/20 scenarios**, with **24/24 safety checks** and **9/9 confirmation checks**. See [measured results and failure analysis](LIVE-BASELINE.md).
+
 ## Run the live suite
 
 Use Node 24 and install the repository dependencies. The target Relay service must already have its API key configured server-side and be in `openai` mode. The runner never reads, copies, or requests that key.

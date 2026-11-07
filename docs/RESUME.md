@@ -4,18 +4,14 @@ Use the actual month/year of your work and your real repository URL. Add a Live 
 
 ## English project entry
 
-**Relay | Customer Support Agent** — GitHub · Demo/video when available  
+**Relay | Customer Support Agent** — [GitHub](https://github.com/jiayu1123/relay-support-agent) · [Live demo](https://relay-support-agent-9jls.onrender.com)  
 _TypeScript, React, Node.js, Express, OpenAI API, PostgreSQL, SQLite, Docker, Vitest_
 
 - Developed a full-stack customer support agent with an OpenAI tool-calling adapter, policy retrieval, order lookup, and human-confirmed exchange and return/refund workflows.
 - Implemented server-side ownership and policy checks, expiring proposals, and transactional inventory updates with idempotent confirmation across SQLite and PostgreSQL.
-- Built inspectable tool traces and a 20-scenario regression suite covering policy boundaries, inventory failures, multilingual requests, and persisted resolution outcomes.
+- Built inspectable tool traces and separate 20-scenario offline and hosted-LLM evaluation suites, grading policy boundaries, multilingual tasks, tool evidence, confirmation safety, and persisted outcomes.
 
-These bullets describe implemented code. The OpenAI adapter is mocked in automated tests until you separately run real API calls. If you have not verified live mode, an explicit alternative first bullet is:
-
-> Built an ecommerce support-agent application with an offline workflow engine and an OpenAI-compatible tool-calling adapter, integrating order lookup, policy retrieval, and customer-confirmed resolution proposals.
-
-After real API verification, describe what you actually observed and measured. Do not write “100% agent success rate” based on the deterministic demo passing its authored suite. Do not write “production-grade,” “deployed at scale,” or “processed refunds” without corresponding evidence.
+The hosted adapter has been verified with actual OpenAI calls. Automated adapter unit tests use a mock; the saved hosted evaluation report contains real calls. Describe these separately. Inspect [the recorded baseline](../verification/live-baseline.json) and its failures before citing measured results. A single run of 20 authored cases is not a production success rate. Do not claim production adoption, scale, or real payment processing without evidence.
 
 ## Short Chinese explanation
 
