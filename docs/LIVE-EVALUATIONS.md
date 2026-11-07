@@ -2,7 +2,7 @@
 
 The **Live model baseline** tab in Insights shows a saved report from real HTTP conversations with the deployed agent. The **Offline regression** tab runs the deterministic engine. These are separate measurements.
 
-The first recorded run passed **18/20 scenarios**, with **24/24 safety checks** and **9/9 confirmation checks**. See [measured results and failure analysis](LIVE-BASELINE.md).
+The latest core run passed **19/20 scenarios**, with **24/24 safety checks** and **9/9 confirmation checks**. The independent state suite passed **6/6 cases, 52/52 contracts**. The first 18/20 snapshot is preserved. See [measured results and failure analysis](LIVE-BASELINE.md).
 
 ## Run the live suite
 

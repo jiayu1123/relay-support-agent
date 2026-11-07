@@ -1,36 +1,36 @@
-# Recorded hosted-model baseline
+# Recorded hosted-model baselines
 
-The first `relay-live-v1` run was recorded on **2026-11-07** against hosted revision `2ac99009c9555d2e4b768b04aaac8166e92cdec7`, using `gpt-4.1-mini`. The complete machine-readable evidence is [live-baseline.json](../verification/live-baseline.json). The app displays the same saved snapshot in **Insights → Live model baseline**.
+The latest core report is [live-baseline.json](../verification/live-baseline.json). The independent structured-state report is [state-live-baseline.json](../verification/state-live-baseline.json). Both evaluated hosted source `963d7e5740e6c6105f3e7ae428b1fc839806d8aa` with `gpt-4.1-mini` on **2026-11-07**. Insights lets you select either saved suite; the scores are never combined.
 
-| Measurement                                  | Observed         |
-| -------------------------------------------- | ---------------- |
-| Scenarios / model turns                      | 20 / 23          |
-| Task outcomes / all-contract scenarios       | 18/20 / 18/20    |
-| Individual contracts                         | 131/134          |
-| Safety contracts                             | 24/24            |
-| Confirmation and replay contracts            | 9/9              |
-| Live-call integrity / fixture cleanup        | 20/20 / 20/20    |
-| P50 / P95 agent-turn latency                 | 1,457 / 2,199 ms |
-| Observed input / output tokens               | 42,019 / 1,948   |
-| Wall time, including pacing and fixture work | 173.17 s         |
-| Repetitions per case                         | 1                |
+| Measurement                                 | Core support suite | State suite      |
+| ------------------------------------------- | ------------------ | ---------------- |
+| Scenarios / model turns                     | 20 / 23            | 6 / 12           |
+| Task outcomes / all-contract scenarios      | 19/20 / 19/20      | 6/6 / 6/6        |
+| Individual contracts                        | 133/134            | 52/52            |
+| Safety contracts                            | 24/24              | 12/12            |
+| Confirmation and replay contracts           | 9/9                | 3/3              |
+| Live-call integrity / fixture cleanup       | 20/20 / 20/20      | 6/6 / 6/6        |
+| P50 / P95 agent-turn latency                | 1,600 / 2,154 ms   | 1,614 / 2,765 ms |
+| Observed input / output tokens              | 58,369 / 2,288     | 26,586 / 1,056   |
+| Wall time including pacing and fixture work | 171.349 s          | 65.023 s         |
+| Repetitions per case                        | 1                  | 1                |
 
-The source revision and model remained stable throughout the run. No scenario was removed or retried to obtain a better score. The CLI exited with status 1 because two contracts failed; it still wrote the completed report. All fixture accounts were cleaned up. Token usage was complete for all observed turns.
+Both runs completed with stable source/model, complete observed usage, and all disposable fixture accounts cleaned up. No failed cases were removed or retried for a better score. The core CLI exited 1 because a contract failed, while still saving the completed report. The state CLI exited 0.
 
-## Failure analysis
+## Current remaining failure: ticket reference omitted from the answer
 
-### Personalized final-sale return
+The core handoff case **created a real internal ticket** through `escalate_to_human`. The saved conversation state correctly became `escalated` and contained the actual `TKT-…` reference. However, the model's answer said it created a ticket without including that reference. The grader requires both a persisted ticket **and its exact reference in the response**, so this scenario remains failed.
 
-The customer explicitly said the item was **not defective** and requested a change-of-mind refund. The model called `propose_resolution` with `Changed mind, wallet not defective`. The backend incorrectly treated the substring `defect` as affirmative defect evidence and allowed a refund proposal. This failed both the no-proposal task contract and the required `FINAL_SALE` backend-evidence contract.
+This is a response-completeness failure, not a missing-ticket database failure. The state inspector exposes the correct reference. A future response-format change can require the model to include it, followed by a new recorded run; this report is not retrospectively relabeled.
 
-This is a real backend eligibility bug exposed by a real model call, not just wording quality. No order changed because the scenario never confirmed the proposal. The next policy change should distinguish negated defect claims and preserve the same case for regression. This baseline records the observed bug; it does not claim the issue is fixed.
+## Preserved first baseline
 
-### Specialist handoff
+The original `relay-live-v1` run against `2ac99009c9555d2e4b768b04aaac8166e92cdec7` remains in [live-baseline-initial.json](../verification/live-baseline-initial.json): **18/20 scenarios**, **131/134 contracts**, with failures in personalized final-sale refund handling and handoff. Its P50/P95 was 1,457/2,199 ms and usage was 42,019 input + 1,948 output tokens.
 
-The customer requested an internal support ticket for a missing delivery without giving an order number. The model asked for the order ID and did not call a tool. The authored contract expected a persisted ticket and its reference in the response, so it failed.
+In that run, the backend treated the substring `defect` in **“not defective”** as affirmative evidence and allowed a personalized-item change-of-mind refund proposal. No order changed because the scenario did not confirm it. Structured state now retains customer evidence, policy checks exclude explicit defect negation, and model-supplied invented reasons cannot supply missing defect evidence. The unchanged core case and a dedicated state case both passed on the new revision.
 
-Asking for an order ID can be a reasonable product decision. This result specifically means **the immediate-handoff contract was unmet**, not that every clarifying handoff is inherently wrong. A future iteration should define whether general tickets may be created without an order, and add a separate multi-turn handoff case. Do not loosen the current grader retrospectively or relabel this run as passing.
+The original handoff case asked for an order ID and created no ticket. The new revision permits general handoff without an order ID and created the ticket in the live run, but still failed the unchanged response-reference contract described above. The core case definitions and suite hash are unchanged. `contracts-v2` adds optional state contracts for the separate state suite; it does not loosen the core handoff requirement.
 
 ## Interpretation
 
-The 90% scenario result describes a small authored suite, one run per case. It is not a production resolution rate, a repeatability estimate, or a security certification. Safety checks assess specific application boundaries; they do not prove every business policy is correct. For reproducible reruns and grading details, see [LIVE-EVALUATIONS.md](LIVE-EVALUATIONS.md).
+These are small authored suites with one run per case. The 95% core result is not a production resolution rate, repeatability estimate, or security certification. Safety checks assess specific application boundaries and do not prove every business policy is correct. The snapshots record the evaluated source, not continuously measured current performance. See [methodology](LIVE-EVALUATIONS.md) and [state design](CONVERSATION-STATE.md).

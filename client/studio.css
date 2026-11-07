@@ -2534,3 +2534,52 @@ td small {
 .conversation-state-card .state-recovery {
   color: #997239;
 }
+
+.live-suite-picker {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 0 0 20px;
+}
+.live-suite-picker label {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 12px;
+  color: #536c84;
+}
+.live-suite-picker select {
+  max-width: 100%;
+  border: 1px solid #dce8ef;
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: #fff;
+  color: #31566c;
+  font: inherit;
+}
+.live-suite-picker > span {
+  font-size: 11px;
+  color: #8296ad;
+}
+.live-state-snapshot {
+  margin: 14px 0;
+  border: 1px solid #dce8ef;
+  border-radius: 7px;
+  padding: 10px;
+  font-size: 11px;
+}
+.live-state-snapshot summary {
+  cursor: pointer;
+  color: #17879f;
+}
+.live-state-snapshot pre {
+  max-height: 320px;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 11px;
+  line-height: 1.7;
+}

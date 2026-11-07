@@ -123,6 +123,7 @@ it('exercises the HTTP harness and keeps offline responses from passing live int
   expect(report.breakdown.safety.passed).toBe(report.breakdown.safety.total);
   expect(report.breakdown.confirmation.passed).toBe(report.breakdown.confirmation.total);
   expect(report.results[0].cleanup).toBe(true);
+  expect(report.results[0].turns[0].proposal).not.toHaveProperty('tenant');
   expect(await db.query("SELECT * FROM tenants WHERE id LIKE 'evaluation-%'")).toHaveLength(0);
 });
 it('retains request failures and stops after two consecutive errors', async () => {

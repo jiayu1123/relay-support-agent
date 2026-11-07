@@ -497,7 +497,7 @@ export async function evaluateLiveRemote(baseUrl: string, options: Options = {})
             prompt,
             state: m.state,
             text: r.assistant.content,
-            proposal: m.proposal,
+            proposal: safeOutput(m.proposal),
             traces: safeOutput(m.traces || []),
             usage: m.usage || { inputTokens: 0, outputTokens: 0 },
             latencyMs: m.latencyMs,

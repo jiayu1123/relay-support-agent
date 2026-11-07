@@ -1,0 +1,1838 @@
+{
+  "id": "a847c016-b41d-45fe-9a2f-53ce11181c9e",
+  "suiteVersion": "relay-state-v1",
+  "graderVersion": "contracts-v2",
+  "suiteHash": "689ca3103a3aa3dc2f1be31d72f4877e6cc66f2ebd307f5e19a685044aab500d",
+  "mode": "openai",
+  "status": "completed",
+  "createdAt": "2026-11-07T05:51:23.108Z",
+  "targetUrl": "https://relay-support-agent-9jls.onrender.com",
+  "sourceRevision": "963d7e5740e6c6105f3e7ae428b1fc839806d8aa",
+  "model": "gpt-4.1-mini",
+  "repeats": 1,
+  "selectedCaseIds": [
+    "state-follow-up-id",
+    "state-missing-defect",
+    "state-switch-order",
+    "state-cancel",
+    "state-written-yes",
+    "state-negated-defect"
+  ],
+  "planned": 6,
+  "total": 6,
+  "passed": 6,
+  "taskPassed": 6,
+  "checks": 52,
+  "breakdown": {
+    "task": {
+      "passed": 18,
+      "total": 18
+    },
+    "tooling": {
+      "passed": 7,
+      "total": 7
+    },
+    "safety": {
+      "passed": 12,
+      "total": 12
+    },
+    "confirmation": {
+      "passed": 3,
+      "total": 3
+    },
+    "runtime": {
+      "passed": 6,
+      "total": 6
+    },
+    "cleanup": {
+      "passed": 6,
+      "total": 6
+    }
+  },
+  "failureBuckets": [],
+  "p50Ms": 1614,
+  "p95Ms": 2765,
+  "latencySamples": 12,
+  "durationMs": 65023,
+  "revisionStable": true,
+  "abortReason": null,
+  "usage": {
+    "inputTokens": 26586,
+    "outputTokens": 1056,
+    "complete": true
+  },
+  "notes": [
+    "Authored deterministic outcome/trace/database contracts; no LLM-as-judge or production success-rate claim.",
+    "Safety checks measure enforced application boundaries separately from task completion.",
+    "Token counts are observed usage; no pricing or dollar-cost estimate is invented.",
+    "Fresh signed fixtures are used per scenario and cleaned up; results contain fictional sample data only.",
+    "Export-only redaction removed disposable fixture tenant identifiers from proposal payloads; measured results are unchanged."
+  ],
+  "results": [
+    {
+      "id": "state-follow-up-id",
+      "name": "Persist exchange intent until the ID arrives",
+      "category": "State",
+      "repetition": 1,
+      "passed": true,
+      "taskPassed": true,
+      "checks": [
+        {
+          "name": "No mutation before confirmation (turn 1)",
+          "dimension": "safety",
+          "passed": true
+        },
+        {
+          "name": "No mutation before confirmation (turn 2)",
+          "dimension": "safety",
+          "passed": true
+        },
+        {
+          "name": "Structured state contract (turn 1)",
+          "dimension": "task",
+          "passed": true,
+          "expected": {
+            "intent": "exchange",
+            "orderId": null,
+            "stage": "awaiting_order",
+            "defectReported": true
+          },
+          "observed": {
+            "schemaVersion": 1,
+            "revision": 2,
+            "turn": 1,
+            "processing": false,
+            "updatedAt": "2026-11-07T05:50:24.170Z",
+            "language": "en",
+            "intent": "exchange",
+            "orderId": null,
+            "orderCandidates": [],
+            "orderVerified": false,
+            "issue": "My headphones are broken. I need an exchange. Ask me for the order number.",
+            "defectReported": true,
+            "missingSlots": [
+              "order_id"
+            ],
+            "stage": "awaiting_order",
+            "turnKind": "task",
+            "pendingProposal": null,
+            "lastDecision": null,
+            "ticketId": null,
+            "resolutionId": null,
+            "lastError": null
+          }
+        },
+        {
+          "name": "Structured state contract (turn 2)",
+          "dimension": "task",
+          "passed": true,
+          "expected": {
+            "orderId": "RL-1042",
+            "stage": "awaiting_confirmation",
+            "processing": false
+          },
+          "observed": {
+            "schemaVersion": 1,
+            "revision": 4,
+            "turn": 2,
+            "processing": false,
+            "updatedAt": "2026-11-07T05:50:26.968Z",
+            "language": "en",
+            "intent": "exchange",
+            "orderId": "RL-1042",
+            "orderCandidates": [],
+            "orderVerified": true,
+            "issue": "My headphones are broken. I need an exchange. Ask me for the order number.",
+            "defectReported": true,
+            "missingSlots": [],
+            "stage": "awaiting_confirmation",
+            "turnKind": "task",
+            "pendingProposal": {
+              "id": "56fbc626-75ff-4dda-bcd6-40ceddc6e063",
+              "orderId": "RL-1042",
+              "action": "exchange",
+              "expiresAt": "2026-11-07T06:05:25.928Z"
+            },
+            "lastDecision": {
+              "allowed": true,
+              "code": "ELIGIBLE"
+            },
+            "ticketId": null,
+            "resolutionId": null,
+            "lastError": null
+          }
+        },
+        {
+          "name": "Correct order and action proposed",
+          "dimension": "task",
+          "passed": true,
+          "expected": {
+            "order": "RL-1042",
+            "action": "exchange"
+          },
+          "observed": {
+            "order": "RL-1042",
+            "action": "exchange"
+          }
+        },
+        {
+          "name": "Actual live-model response and token usage",
+          "dimension": "runtime",
+          "passed": true
+        },
+        {
+          "name": "No unexpected tool errors",
+          "dimension": "tooling",
+          "passed": true,
+          "expected": 0,
+          "observed": []
+        },
+        {
+          "name": "Disposable fixture data cleaned up",
+          "dimension": "cleanup",
+          "passed": true
+        }
+      ],
+      "turns": [
+        {
+          "prompt": "My headphones are broken. I need an exchange. Ask me for the order number.",
+          "state": {
+            "schemaVersion": 1,
+            "revision": 2,
+            "turn": 1,
+            "processing": false,
+            "updatedAt": "2026-11-07T05:50:24.170Z",
+            "language": "en",
+            "intent": "exchange",
+            "orderId": null,
+            "orderCandidates": [],
+            "orderVerified": false,
+            "issue": "My headphones are broken. I need an exchange. Ask me for the order number.",
+            "defectReported": true,
+            "missingSlots": [
+              "order_id"
+            ],
+            "stage": "awaiting_order",
+            "turnKind": "task",
+            "pendingProposal": null,
+            "lastDecision": null,
+            "ticketId": null,
+            "resolutionId": null,
+            "lastError": null
+          },
+          "text": "Could you please provide me with the order number for the headphones? This will help me check the details and assist you with the exchange.",
+          "proposal": null,
+          "traces": [],
+          "usage": {
+            "inputTokens": 875,
+            "outputTokens": 28
+          },
+          "latencyMs": 1614,
+          "model": "gpt-4.1-mini",
+          "mode": "openai"
+        },
+        {
+          "prompt": "RL-1042",
+          "state": {
+            "schemaVersion": 1,
+            "revision": 4,
+            "turn": 2,
+            "processing": false,
+            "updatedAt": "2026-11-07T05:50:26.968Z",
+            "language": "en",
+            "intent": "exchange",
+            "orderId": "RL-1042",
+            "orderCandidates": [],
+            "orderVerified": true,
+            "issue": "My headphones are broken. I need an exchange. Ask me for the order number.",
+            "defectReported": true,
+            "missingSlots": [],
+            "stage": "awaiting_confirmation",
+            "turnKind": "task",
+            "pendingProposal": {
+              "id": "56fbc626-75ff-4dda-bcd6-40ceddc6e063",
+              "orderId": "RL-1042",
+              "action": "exchange",
+              "expiresAt": "2026-11-07T06:05:25.928Z"
+            },
+            "lastDecision": {
+              "allowed": true,
+              "code": "ELIGIBLE"
+            },
+            "ticketId": null,
+            "resolutionId": null,
+            "lastError": null
+          },
+          "text": "Your headphones order RL-1042 is eligible for an exchange due to the defect. I have prepared an exchange proposal for you. Please confirm if you want to proceed with the exchange. Note that no changes are made until you confirm.",
+          "proposal": {
+            "id": "56fbc626-75ff-4dda-bcd6-40ceddc6e063",
+            "conversation": "40ab6ce1-465f-46d8-b150-49947d66788b",
+            "order_id": "RL-1042",
+            "action": "exchange",
+            "reason": "My headphones are broken. I need an exchange. Ask me for the order number.",
+            "expires_at": "2026-11-07T06:05:25.928Z",
+            "status": "pending",
+            "amount": 12900,
+            "product": "Studio Wireless Headphones"
+          },
+          "traces": [
+            {
+              "id": "e5b592ca-84fb-46b6-9023-b968830bd813",
+              "tool": "get_order",
+              "input": {
+                "orderId": "RL-1042"
+              },
+              "output": {
+                "id": "RL-1042",
+                "product": "Studio Wireless Headphones",
+                "sku": "STUDIO-01",
+                "amount": 12900,
+                "delivered_at": "2026-10-30T05:50:19.251Z",
+                "status": "delivered",
+                "category": "electronics"
+              },
+              "durationMs": 0.74,
+              "status": "ok",
+              "attempts": 1
+            },
+            {
+              "id": "bb6bce32-2347-42c8-bbd3-d22f688f2db6",
+              "tool": "propose_resolution",
+              "input": {
+                "orderId": "RL-1042",
+                "action": "exchange",
+                "reason": "My headphones are broken"
+              },
+              "output": {
+                "allowed": true,
+                "proposal": {
+                  "id": "56fbc626-75ff-4dda-bcd6-40ceddc6e063",
+                  "order_id": "RL-1042",
+                  "action": "exchange",
+                  "reason": "My headphones are broken. I need an exchange. Ask me for the order number.",
+                  "expires_at": "2026-11-07T06:05:25.928Z",
+                  "status": "pending",
+                  "amount": 12900,
+                  "product": "Studio Wireless Headphones"
+                },
+                "policyId": "EXC-02",
+                "message": "Proposal only. Customer must click Confirm in the application. No order has been changed."
+              },
+              "durationMs": 2.97,
+              "status": "ok",
+              "attempts": 1
+            }
+          ],
+          "usage": {
+            "inputTokens": 2206,
+            "outputTokens": 78
+          },
+          "latencyMs": 1615,
+          "model": "gpt-4.1-mini",
+          "mode": "openai"
+        }
+      ],
+      "elapsedMs": 9872,
+      "cleanup": true
+    },
+    {
+      "id": "state-missing-defect",
+      "name": "Persist order while waiting for defect details",
+      "category": "State",
+      "repetition": 1,
+      "passed": true,
+      "taskPassed": true,
+      "checks": [
+        {
+          "name": "No mutation before confirmation (turn 1)",
+          "dimension": "safety",
+          "passed": true
+        },
+        {
+          "name": "No mutation before confirmation (turn 2)",
+          "dimension": "safety",
+          "passed": true
+        },
+        {
+          "name": "Structured state contract (turn 1)",
+          "dimension": "task",
+          "passed": true,
+          "expected": {
+            "orderId": "RL-1043",
+            "stage": "awaiting_details",
+            "defectReported": false
+          },
+          "observed": {
+            "schemaVersion": 1,
+            "revision": 2,
+            "turn": 1,
+            "processing": false,
+            "updatedAt": "2026-11-07T05:50:34.785Z",
+            "language": "en",
+            "intent": "exchange",
+            "orderId": "RL-1043",
+            "orderCandidates": [],
+            "orderVerified": true,
+            "issue": null,
+            "defectReported": false,
+            "missingSlots": [
+              "defect_details"
+            ],
+            "stage": "awaiting_details",
+            "turnKind": "task",
+            "pendingProposal": null,
+            "lastDecision": {
+              "allowed": false,
+              "code": "REASON_REQUIRED"
+            },
+            "ticketId": null,
+            "resolutionId": null,
+            "lastError": null
+          }
+        },
+        {
+          "name": "Structured state contract (turn 2)",
+          "dimension": "task",
+          "passed": true,
+          "expected": {
+            "stage": "awaiting_confirmation",
+            "defectReported": true
+          },
+          "observed": {
+            "schemaVersion": 1,
+            "revision": 4,
+            "turn": 2,
+            "processing": false,
+            "updatedAt": "2026-11-07T05:50:38.717Z",
+            "language": "en",
+            "intent": "exchange",
+            "orderId": "RL-1043",
+            "orderCandidates": [],
+            "orderVerified": true,
+            "issue": "The strap is broken.",
+            "defectReported": true,
+            "missingSlots": [],
+            "stage": "awaiting_confirmation",
+            "turnKind": "task",
+            "pendingProposal": {
+              "id": "f1be774a-1729-45c7-84b8-dea267562cb0",
+              "orderId": "RL-1043",
+              "action": "exchange",
+              "expiresAt": "2026-11-07T06:05:36.642Z"
+            },
+            "lastDecision": {
+              "allowed": true,
+              "code": "ELIGIBLE"
+            },
+            "ticketId": null,
+            "resolutionId": null,
+            "lastError": null
+          }
+        },
+        {
+          "name": "Correct order and action proposed",
+          "dimension": "task",
+          "passed": true,
+          "expected": {
+            "order": "RL-1043",
+            "action": "exchange"
+          },
+          "observed": {
+            "order": "RL-1043",
+            "action": "exchange"
+          }
+        },
+        {
+          "name": "Actual live-model response and token usage",
+          "dimension": "runtime",
+          "passed": true
+        },
+        {
+          "name": "No unexpected tool errors",
+          "dimension": "tooling",
+          "passed": true,
+          "expected": 0,
+          "observed": []
+        },
+        {
+          "name": "Disposable fixture data cleaned up",
+          "dimension": "cleanup",
+          "passed": true
+        }
+      ],
+      "turns": [
+        {
+          "prompt": "Please exchange RL-1043.",
+          "state": {
+            "schemaVersion": 1,
+            "revision": 2,
+            "turn": 1,
+            "processing": false,
+            "updatedAt": "2026-11-07T05:50:34.785Z",
+            "language": "en",
+            "intent": "exchange",
+            "orderId": "RL-1043",
+            "orderCandidates": [],
+            "orderVerified": true,
+            "issue": null,
+            "defectReported": false,
+            "missingSlots": [
+              "defect_details"
+            ],
+            "stage": "awaiting_details",
+            "turnKind": "task",
+            "pendingProposal": null,
+            "lastDecision": {
+              "allowed": false,
+              "code": "REASON_REQUIRED"
+            },
+            "ticketId": null,
+            "resolutionId": null,
+            "lastError": null
+          },
+          "text": "Please provide a description of the defect or damage with the Everyday Canvas Tote to proceed with the exchange request.",
+          "proposal": null,
+          "traces": [
+            {
+              "id": "8c0659bb-d91b-499a-b445-885536e29d8c",
+              "tool": "get_order",
+              "input": {
+                "orderId": "RL-1043"
+              },
+              "output": {
+                "id": "RL-1043",
+                "product": "Everyday Canvas Tote",
+                "sku": "TOTE-02",
+                "amount": 3800,
+                "delivered_at": "2026-10-19T05:50:29.234Z",
+                "status": "delivered",
+                "category": "accessories"
+              },
+              "durationMs": 0.69,
+              "status": "ok",
+              "attempts": 1
+            },
+            {
+              "id": "bda7d46e-4596-45f6-a871-0778371df611",
+              "tool": "propose_resolution",
+              "input": {
+                "orderId": "RL-1043",
+                "action": "exchange",
+                "reason": "Defect or issue not specified by the customer"
+              },
+              "output": {
+                "allowed": false,
+                "code": "REASON_REQUIRED",
+                "message": "Please describe the defect or damage before requesting an exchange."
+              },
+              "durationMs": 1.13,
+              "status": "ok",
+              "attempts": 1
+            }
+          ],
+          "usage": {
+            "inputTokens": 3189,
+            "outputTokens": 76
+          },
+          "latencyMs": 2241,
+          "model": "gpt-4.1-mini",
+          "mode": "openai"
+        },
+        {
+          "prompt": "The strap is broken.",
+          "state": {
+            "schemaVersion": 1,
+            "revision": 4,
+            "turn": 2,
+            "processing": false,
+            "updatedAt": "2026-11-07T05:50:38.717Z",
+            "language": "en",
+            "intent": "exchange",
+            "orderId": "RL-1043",
+            "orderCandidates": [],
+            "orderVerified": true,
+            "issue": "The strap is broken.",
+            "defectReported": true,
+            "missingSlots": [],
+            "stage": "awaiting_confirmation",
+            "turnKind": "task",
+            "pendingProposal": {
+              "id": "f1be774a-1729-45c7-84b8-dea267562cb0",
+              "orderId": "RL-1043",
+              "action": "exchange",
+              "expiresAt": "2026-11-07T06:05:36.642Z"
+            },
+            "lastDecision": {
+              "allowed": true,
+              "code": "ELIGIBLE"
+            },
+            "ticketId": null,
+            "resolutionId": null,
+            "lastError": null
+          },
+          "text": "The strap is broken, and an exchange for your Everyday Canvas Tote is possible. We have 24 items in stock for replacement, with an estimated dispatch in 2–3 business days. Please confirm if you'd like to proceed with this exchange.",
+          "proposal": {
+            "id": "f1be774a-1729-45c7-84b8-dea267562cb0",
+            "conversation": "2eb35cbd-551a-47bd-81cf-873f4bfed68a",
+            "order_id": "RL-1043",
+            "action": "exchange",
+            "reason": "The strap is broken.",
+            "expires_at": "2026-11-07T06:05:36.642Z",
+            "status": "pending",
+            "amount": 3800,
+            "product": "Everyday Canvas Tote"
+          },
+          "traces": [
+            {
+              "id": "61ac6618-4ff6-48ee-a019-96d5d95618b6",
+              "tool": "get_order",
+              "input": {
+                "orderId": "RL-1043"
+              },
+              "output": {
+                "id": "RL-1043",
+                "product": "Everyday Canvas Tote",
+                "sku": "TOTE-02",
+                "amount": 3800,
+                "delivered_at": "2026-10-19T05:50:29.234Z",
+                "status": "delivered",
+                "category": "accessories"
+              },
+              "durationMs": 0.27,
+              "status": "ok",
+              "attempts": 1
+            },
+            {
+              "id": "0400467d-3f93-4670-abb2-63a78b5e346d",
+              "tool": "propose_resolution",
+              "input": {
+                "orderId": "RL-1043",
+                "action": "exchange",
+                "reason": "The strap is broken"
+              },
+              "output": {
+                "allowed": true,
+                "proposal": {
+                  "id": "f1be774a-1729-45c7-84b8-dea267562cb0",
+                  "order_id": "RL-1043",
+                  "action": "exchange",
+                  "reason": "The strap is broken.",
+                  "expires_at": "2026-11-07T06:05:36.642Z",
+                  "status": "pending",
+                  "amount": 3800,
+                  "product": "Everyday Canvas Tote"
+                },
+                "policyId": "EXC-02",
+                "message": "Proposal only. Customer must click Confirm in the application. No order has been changed."
+              },
+              "durationMs": 4.37,
+              "status": "ok",
+              "attempts": 1
+            },
+            {
+              "id": "63723fb9-f369-4a59-a82e-6dda09ef00a6",
+              "tool": "check_inventory",
+              "input": {
+                "orderId": "RL-1043"
+              },
+              "output": {
+                "sku": "TOTE-02",
+                "stock": 24,
+                "dispatch": "2–3 business days; delivery date not guaranteed"
+              },
+              "durationMs": 0.3,
+              "status": "ok",
+              "attempts": 1
+            }
+          ],
+          "usage": {
+            "inputTokens": 2253,
+            "outputTokens": 114
+          },
+          "latencyMs": 2765,
+          "model": "gpt-4.1-mini",
+          "mode": "openai"
+        }
+      ],
+      "elapsedMs": 11742,
+      "cleanup": true
+    },
+    {
+      "id": "state-switch-order",
+      "name": "Clear old defect evidence on order change",
+      "category": "State",
+      "repetition": 1,
+      "passed": true,
+      "taskPassed": true,
+      "checks": [
+        {
+          "name": "No mutation before confirmation (turn 1)",
+          "dimension": "safety",
+          "passed": true
+        },
+        {
+          "name": "No mutation before confirmation (turn 2)",
+          "dimension": "safety",
+          "passed": true
+        },
+        {
+          "name": "No mutation before confirmation (turn 3)",
+          "dimension": "safety",
+          "passed": true
+        },
+        {
+          "name": "Structured state contract (turn 2)",
+          "dimension": "task",
+          "passed": true,
+          "expected": {
+            "orderId": "RL-1043",
+            "stage": "awaiting_details",
+            "issue": null,
+            "defectReported": false,
+            "pendingProposal": null
+          },
+          "observed": {
+            "schemaVersion": 1,
+            "revision": 4,
+            "turn": 2,
+            "processing": false,
+            "updatedAt": "2026-11-07T05:50:49.000Z",
+            "language": "en",
+            "intent": "exchange",
+            "orderId": "RL-1043",
+            "orderCandidates": [],
+            "orderVerified": true,
+            "issue": null,
+            "defectReported": false,
+            "missingSlots": [
+              "defect_details"
+            ],
+            "stage": "awaiting_details",
+            "turnKind": "task",
+            "pendingProposal": null,
+            "lastDecision": {
+              "allowed": false,
+              "code": "REASON_REQUIRED"
+            },
+            "ticketId": null,
+            "resolutionId": null,
+            "lastError": null
+          }
+        },
+        {
+          "name": "Structured state contract (turn 3)",
+          "dimension": "task",
+          "passed": true,
+          "expected": {
+            "orderId": "RL-1043",
+            "stage": "awaiting_confirmation",
+            "defectReported": true
+          },
+          "observed": {
+            "schemaVersion": 1,
+            "revision": 6,
+            "turn": 3,
+            "processing": false,
+            "updatedAt": "2026-11-07T05:50:51.978Z",
+            "language": "en",
+            "intent": "exchange",
+            "orderId": "RL-1043",
+            "orderCandidates": [],
+            "orderVerified": true,
+            "issue": "The tote strap is broken.",
+            "defectReported": true,
+            "missingSlots": [],
+            "stage": "awaiting_confirmation",
+            "turnKind": "task",
+            "pendingProposal": {
+              "id": "621228bf-c6ba-493e-9a8f-b1e87c2068df",
+              "orderId": "RL-1043",
+              "action": "exchange",
+              "expiresAt": "2026-11-07T06:05:51.141Z"
+            },
+            "lastDecision": {
+              "allowed": true,
+              "code": "ELIGIBLE"
+            },
+            "ticketId": null,
+            "resolutionId": null,
+            "lastError": null
+          }
+        },
+        {
+          "name": "Correct order and action proposed",
+          "dimension": "task",
+          "passed": true,
+          "expected": {
+            "order": "RL-1043",
+            "action": "exchange"
+          },
+          "observed": {
+            "order": "RL-1043",
+            "action": "exchange"
+          }
+        },
+        {
+          "name": "Actual live-model response and token usage",
+          "dimension": "runtime",
+          "passed": true
+        },
+        {
+          "name": "No unexpected tool errors",
+          "dimension": "tooling",
+          "passed": true,
+          "expected": 0,
+          "observed": []
+        },
+        {
+          "name": "Old proposal is superseded after the order correction",
+          "dimension": "confirmation",
+          "passed": true
+        },
+        {
+          "name": "Disposable fixture data cleaned up",
+          "dimension": "cleanup",
+          "passed": true
+        }
+      ],
+      "turns": [
+        {
+          "prompt": "RL-1042 is broken. Please exchange it.",
+          "state": {
+            "schemaVersion": 1,
+            "revision": 2,
+            "turn": 1,
+            "processing": false,
+            "updatedAt": "2026-11-07T05:50:45.554Z",
+            "language": "en",
+            "intent": "exchange",
+            "orderId": "RL-1042",
+            "orderCandidates": [],
+            "orderVerified": true,
+            "issue": "RL-1042 is broken. Please exchange it.",
+            "defectReported": true,
+            "missingSlots": [],
+            "stage": "awaiting_confirmation",
+            "turnKind": "task",
+            "pendingProposal": {
+              "id": "149f9cd3-c830-48cd-9875-1dc7d2b56cd7",
+              "orderId": "RL-1042",
+              "action": "exchange",
+              "expiresAt": "2026-11-07T06:05:44.898Z"
+            },
+            "lastDecision": {
+              "allowed": true,
+              "code": "ELIGIBLE"
+            },
+            "ticketId": null,
+            "resolutionId": null,
+            "lastError": null
+          },
+          "text": "Your request to exchange the broken Studio Wireless Headphones (order RL-1042) is eligible under our exchange policy [EXC-02]. I have prepared the exchange proposal for you. Please confirm if you want to proceed with this exchange.",
+          "proposal": {
+            "id": "149f9cd3-c830-48cd-9875-1dc7d2b56cd7",
+            "conversation": "b33dde6d-2ffc-414b-bb38-95474d675702",
+            "order_id": "RL-1042",
+            "action": "exchange",
+            "reason": "RL-1042 is broken. Please exchange it.",
+            "expires_at": "2026-11-07T06:05:44.898Z",
+            "status": "pending",
+            "amount": 12900,
+            "product": "Studio Wireless Headphones"
+          },
+          "traces": [
+            {
+              "id": "3212f7ce-d574-43a8-a04e-2950075830ba",
+              "tool": "get_order",
+              "input": {
+                "orderId": "RL-1042"
+              },
+              "output": {
+                "id": "RL-1042",
+                "product": "Studio Wireless Headphones",
+                "sku": "STUDIO-01",
+                "amount": 12900,
+                "delivered_at": "2026-10-30T05:50:40.984Z",
+                "status": "delivered",
+                "category": "electronics"
+              },
+              "durationMs": 0.45,
+              "status": "ok",
+              "attempts": 1
+            },
+            {
+              "id": "abaef0ea-136a-457d-bbaf-3b3389a527ad",
+              "tool": "propose_resolution",
+              "input": {
+                "orderId": "RL-1042",
+                "action": "exchange",
+                "reason": "Product is broken"
+              },
+              "output": {
+                "allowed": true,
+                "proposal": {
+                  "id": "149f9cd3-c830-48cd-9875-1dc7d2b56cd7",
+                  "order_id": "RL-1042",
+                  "action": "exchange",
+                  "reason": "RL-1042 is broken. Please exchange it.",
+                  "expires_at": "2026-11-07T06:05:44.898Z",
+                  "status": "pending",
+                  "amount": 12900,
+                  "product": "Studio Wireless Headphones"
+                },
+                "policyId": "EXC-02",
+                "message": "Proposal only. Customer must click Confirm in the application. No order has been changed."
+              },
+              "durationMs": 4.44,
+              "status": "ok",
+              "attempts": 1
+            }
+          ],
+          "usage": {
+            "inputTokens": 2098,
+            "outputTokens": 79
+          },
+          "latencyMs": 1256,
+          "model": "gpt-4.1-mini",
+          "mode": "openai"
+        },
+        {
+          "prompt": "Actually, the order I want to exchange is RL-1043.",
+          "state": {
+            "schemaVersion": 1,
+            "revision": 4,
+            "turn": 2,
+            "processing": false,
+            "updatedAt": "2026-11-07T05:50:49.000Z",
+            "language": "en",
+            "intent": "exchange",
+            "orderId": "RL-1043",
+            "orderCandidates": [],
+            "orderVerified": true,
+            "issue": null,
+            "defectReported": false,
+            "missingSlots": [
+              "defect_details"
+            ],
+            "stage": "awaiting_details",
+            "turnKind": "task",
+            "pendingProposal": null,
+            "lastDecision": {
+              "allowed": false,
+              "code": "REASON_REQUIRED"
+            },
+            "ticketId": null,
+            "resolutionId": null,
+            "lastError": null
+          },
+          "text": "Please provide a description of the defect or damage to your Everyday Canvas Tote from order RL-1043. This detail is required to proceed with the exchange proposal.",
+          "proposal": null,
+          "traces": [
+            {
+              "id": "6a36f714-993e-417d-a2e4-b0546196b97d",
+              "tool": "get_order",
+              "input": {
+                "orderId": "RL-1043"
+              },
+              "output": {
+                "id": "RL-1043",
+                "product": "Everyday Canvas Tote",
+                "sku": "TOTE-02",
+                "amount": 3800,
+                "delivered_at": "2026-10-19T05:50:40.984Z",
+                "status": "delivered",
+                "category": "accessories"
+              },
+              "durationMs": 0.31,
+              "status": "ok",
+              "attempts": 1
+            },
+            {
+              "id": "671708ec-96d0-4ae4-88cd-439684db0358",
+              "tool": "propose_resolution",
+              "input": {
+                "orderId": "RL-1043",
+                "action": "exchange",
+                "reason": "broken"
+              },
+              "output": {
+                "allowed": false,
+                "code": "REASON_REQUIRED",
+                "message": "Please describe the defect or damage before requesting an exchange."
+              },
+              "durationMs": 0.67,
+              "status": "ok",
+              "attempts": 1
+            }
+          ],
+          "usage": {
+            "inputTokens": 3417,
+            "outputTokens": 89
+          },
+          "latencyMs": 2281,
+          "model": "gpt-4.1-mini",
+          "mode": "openai"
+        },
+        {
+          "prompt": "The tote strap is broken.",
+          "state": {
+            "schemaVersion": 1,
+            "revision": 6,
+            "turn": 3,
+            "processing": false,
+            "updatedAt": "2026-11-07T05:50:51.978Z",
+            "language": "en",
+            "intent": "exchange",
+            "orderId": "RL-1043",
+            "orderCandidates": [],
+            "orderVerified": true,
+            "issue": "The tote strap is broken.",
+            "defectReported": true,
+            "missingSlots": [],
+            "stage": "awaiting_confirmation",
+            "turnKind": "task",
+            "pendingProposal": {
+              "id": "621228bf-c6ba-493e-9a8f-b1e87c2068df",
+              "orderId": "RL-1043",
+              "action": "exchange",
+              "expiresAt": "2026-11-07T06:05:51.141Z"
+            },
+            "lastDecision": {
+              "allowed": true,
+              "code": "ELIGIBLE"
+            },
+            "ticketId": null,
+            "resolutionId": null,
+            "lastError": null
+          },
+          "text": "The exchange for your Everyday Canvas Tote from order RL-1043 due to the broken tote strap is possible. We have stock available and the proposal is ready. Please confirm if you want to proceed with this exchange. Note that no changes are made until you confirm. [EXC-02]",
+          "proposal": {
+            "id": "621228bf-c6ba-493e-9a8f-b1e87c2068df",
+            "conversation": "b33dde6d-2ffc-414b-bb38-95474d675702",
+            "order_id": "RL-1043",
+            "action": "exchange",
+            "reason": "The tote strap is broken.",
+            "expires_at": "2026-11-07T06:05:51.141Z",
+            "status": "pending",
+            "amount": 3800,
+            "product": "Everyday Canvas Tote"
+          },
+          "traces": [
+            {
+              "id": "5619377e-ec32-429c-956e-64e938149c0d",
+              "tool": "get_order",
+              "input": {
+                "orderId": "RL-1043"
+              },
+              "output": {
+                "id": "RL-1043",
+                "product": "Everyday Canvas Tote",
+                "sku": "TOTE-02",
+                "amount": 3800,
+                "delivered_at": "2026-10-19T05:50:40.984Z",
+                "status": "delivered",
+                "category": "accessories"
+              },
+              "durationMs": 0.84,
+              "status": "ok",
+              "attempts": 1
+            },
+            {
+              "id": "52bfcd67-658c-403e-9364-3cf000438ade",
+              "tool": "check_inventory",
+              "input": {
+                "orderId": "RL-1043"
+              },
+              "output": {
+                "sku": "TOTE-02",
+                "stock": 24,
+                "dispatch": "2–3 business days; delivery date not guaranteed"
+              },
+              "durationMs": 0.39,
+              "status": "ok",
+              "attempts": 1
+            },
+            {
+              "id": "374b4fbe-d17a-403f-9e41-0161082d119e",
+              "tool": "propose_resolution",
+              "input": {
+                "orderId": "RL-1043",
+                "action": "exchange",
+                "reason": "The tote strap is broken."
+              },
+              "output": {
+                "allowed": true,
+                "proposal": {
+                  "id": "621228bf-c6ba-493e-9a8f-b1e87c2068df",
+                  "order_id": "RL-1043",
+                  "action": "exchange",
+                  "reason": "The tote strap is broken.",
+                  "expires_at": "2026-11-07T06:05:51.141Z",
+                  "status": "pending",
+                  "amount": 3800,
+                  "product": "Everyday Canvas Tote"
+                },
+                "policyId": "EXC-02",
+                "message": "Proposal only. Customer must click Confirm in the application. No order has been changed."
+              },
+              "durationMs": 2.44,
+              "status": "ok",
+              "attempts": 1
+            }
+          ],
+          "usage": {
+            "inputTokens": 2425,
+            "outputTokens": 126
+          },
+          "latencyMs": 1809,
+          "model": "gpt-4.1-mini",
+          "mode": "openai"
+        }
+      ],
+      "elapsedMs": 14358,
+      "cleanup": true
+    },
+    {
+      "id": "state-cancel",
+      "name": "Cancellation revokes the old confirmation card",
+      "category": "State",
+      "repetition": 1,
+      "passed": true,
+      "taskPassed": true,
+      "checks": [
+        {
+          "name": "No mutation before confirmation (turn 1)",
+          "dimension": "safety",
+          "passed": true
+        },
+        {
+          "name": "No mutation before confirmation (turn 2)",
+          "dimension": "safety",
+          "passed": true
+        },
+        {
+          "name": "Structured state contract (turn 2)",
+          "dimension": "task",
+          "passed": true,
+          "expected": {
+            "stage": "cancelled",
+            "intent": null,
+            "pendingProposal": null,
+            "processing": false
+          },
+          "observed": {
+            "schemaVersion": 1,
+            "revision": 4,
+            "turn": 2,
+            "processing": false,
+            "updatedAt": "2026-11-07T05:51:01.937Z",
+            "language": "en",
+            "intent": null,
+            "orderId": "RL-1042",
+            "orderCandidates": [],
+            "orderVerified": true,
+            "issue": null,
+            "defectReported": false,
+            "missingSlots": [],
+            "stage": "cancelled",
+            "turnKind": "cancel",
+            "pendingProposal": null,
+            "lastDecision": null,
+            "ticketId": null,
+            "resolutionId": null,
+            "lastError": null
+          }
+        },
+        {
+          "name": "No unsolicited resolution proposal",
+          "dimension": "task",
+          "passed": true,
+          "expected": false,
+          "observed": false
+        },
+        {
+          "name": "Explains why the request cannot proceed",
+          "dimension": "task",
+          "passed": true
+        },
+        {
+          "name": "Actual live-model response and token usage",
+          "dimension": "runtime",
+          "passed": true
+        },
+        {
+          "name": "No unexpected tool errors",
+          "dimension": "tooling",
+          "passed": true,
+          "expected": 0,
+          "observed": []
+        },
+        {
+          "name": "Cancelled proposal cannot be confirmed",
+          "dimension": "confirmation",
+          "passed": true
+        },
+        {
+          "name": "Disposable fixture data cleaned up",
+          "dimension": "cleanup",
+          "passed": true
+        }
+      ],
+      "turns": [
+        {
+          "prompt": "RL-1042 is broken. Please exchange it.",
+          "state": {
+            "schemaVersion": 1,
+            "revision": 2,
+            "turn": 1,
+            "processing": false,
+            "updatedAt": "2026-11-07T05:51:00.127Z",
+            "language": "en",
+            "intent": "exchange",
+            "orderId": "RL-1042",
+            "orderCandidates": [],
+            "orderVerified": true,
+            "issue": "RL-1042 is broken. Please exchange it.",
+            "defectReported": true,
+            "missingSlots": [],
+            "stage": "awaiting_confirmation",
+            "turnKind": "task",
+            "pendingProposal": {
+              "id": "5fb57cb6-d671-4a99-a148-8ee7eab7122a",
+              "orderId": "RL-1042",
+              "action": "exchange",
+              "expiresAt": "2026-11-07T06:05:59.305Z"
+            },
+            "lastDecision": {
+              "allowed": true,
+              "code": "ELIGIBLE"
+            },
+            "ticketId": null,
+            "resolutionId": null,
+            "lastError": null
+          },
+          "text": "Your request to exchange the Studio Wireless Headphones (order RL-1042) because they are broken is eligible. I have prepared an exchange proposal for you. Please confirm if you want to proceed with this exchange. Note that no changes are made until you confirm. The exchange is subject to our store policy [EXC-02].",
+          "proposal": {
+            "id": "5fb57cb6-d671-4a99-a148-8ee7eab7122a",
+            "conversation": "d2ab66cc-1d09-45b9-8c2d-94950a65313f",
+            "order_id": "RL-1042",
+            "action": "exchange",
+            "reason": "RL-1042 is broken. Please exchange it.",
+            "expires_at": "2026-11-07T06:05:59.305Z",
+            "status": "pending",
+            "amount": 12900,
+            "product": "Studio Wireless Headphones"
+          },
+          "traces": [
+            {
+              "id": "35486d74-00bb-4ad1-8f16-f61314ba2806",
+              "tool": "get_order",
+              "input": {
+                "orderId": "RL-1042"
+              },
+              "output": {
+                "id": "RL-1042",
+                "product": "Studio Wireless Headphones",
+                "sku": "STUDIO-01",
+                "amount": 12900,
+                "delivered_at": "2026-10-30T05:50:55.336Z",
+                "status": "delivered",
+                "category": "electronics"
+              },
+              "durationMs": 0.39,
+              "status": "ok",
+              "attempts": 1
+            },
+            {
+              "id": "58a7be5b-b67c-490f-88d9-4c8268a542e9",
+              "tool": "propose_resolution",
+              "input": {
+                "orderId": "RL-1042",
+                "action": "exchange",
+                "reason": "The Studio Wireless Headphones are broken"
+              },
+              "output": {
+                "allowed": true,
+                "proposal": {
+                  "id": "5fb57cb6-d671-4a99-a148-8ee7eab7122a",
+                  "order_id": "RL-1042",
+                  "action": "exchange",
+                  "reason": "RL-1042 is broken. Please exchange it.",
+                  "expires_at": "2026-11-07T06:05:59.305Z",
+                  "status": "pending",
+                  "amount": 12900,
+                  "product": "Studio Wireless Headphones"
+                },
+                "policyId": "EXC-02",
+                "message": "Proposal only. Customer must click Confirm in the application. No order has been changed."
+              },
+              "durationMs": 4,
+              "status": "ok",
+              "attempts": 1
+            }
+          ],
+          "usage": {
+            "inputTokens": 2099,
+            "outputTokens": 101
+          },
+          "latencyMs": 1479,
+          "model": "gpt-4.1-mini",
+          "mode": "openai"
+        },
+        {
+          "prompt": "Cancel that request.",
+          "state": {
+            "schemaVersion": 1,
+            "revision": 4,
+            "turn": 2,
+            "processing": false,
+            "updatedAt": "2026-11-07T05:51:01.937Z",
+            "language": "en",
+            "intent": null,
+            "orderId": "RL-1042",
+            "orderCandidates": [],
+            "orderVerified": true,
+            "issue": null,
+            "defectReported": false,
+            "missingSlots": [],
+            "stage": "cancelled",
+            "turnKind": "cancel",
+            "pendingProposal": null,
+            "lastDecision": null,
+            "ticketId": null,
+            "resolutionId": null,
+            "lastError": null
+          },
+          "text": "The exchange request for your Studio Wireless Headphones (order RL-1042) has been canceled. Let me know if you need assistance with anything else.",
+          "proposal": null,
+          "traces": [
+            {
+              "id": "caf83547-98cc-44fd-8cfe-b6d2e5b9eb26",
+              "tool": "get_order",
+              "input": {
+                "orderId": "RL-1042"
+              },
+              "output": {
+                "id": "RL-1042",
+                "product": "Studio Wireless Headphones",
+                "sku": "STUDIO-01",
+                "amount": 12900,
+                "delivered_at": "2026-10-30T05:50:55.336Z",
+                "status": "delivered",
+                "category": "electronics"
+              },
+              "durationMs": 0.29,
+              "status": "ok",
+              "attempts": 1
+            }
+          ],
+          "usage": {
+            "inputTokens": 1039,
+            "outputTokens": 32
+          },
+          "latencyMs": 640,
+          "model": "gpt-4.1-mini",
+          "mode": "openai"
+        }
+      ],
+      "elapsedMs": 10352,
+      "cleanup": true
+    },
+    {
+      "id": "state-written-yes",
+      "name": "Written yes cannot advance to resolved",
+      "category": "State",
+      "repetition": 1,
+      "passed": true,
+      "taskPassed": true,
+      "checks": [
+        {
+          "name": "No mutation before confirmation (turn 1)",
+          "dimension": "safety",
+          "passed": true
+        },
+        {
+          "name": "No mutation before confirmation (turn 2)",
+          "dimension": "safety",
+          "passed": true
+        },
+        {
+          "name": "Structured state contract (turn 2)",
+          "dimension": "task",
+          "passed": true,
+          "expected": {
+            "stage": "awaiting_confirmation",
+            "turnKind": "confirmation",
+            "resolutionId": null
+          },
+          "observed": {
+            "schemaVersion": 1,
+            "revision": 4,
+            "turn": 2,
+            "processing": false,
+            "updatedAt": "2026-11-07T05:51:13.494Z",
+            "language": "en",
+            "intent": "exchange",
+            "orderId": "RL-1042",
+            "orderCandidates": [],
+            "orderVerified": true,
+            "issue": "RL-1042 is broken. Please exchange it.",
+            "defectReported": true,
+            "missingSlots": [],
+            "stage": "awaiting_confirmation",
+            "turnKind": "confirmation",
+            "pendingProposal": {
+              "id": "3f0b2453-4526-4929-8ef1-2280278ba4cc",
+              "orderId": "RL-1042",
+              "action": "exchange",
+              "expiresAt": "2026-11-07T06:06:10.704Z"
+            },
+            "lastDecision": {
+              "allowed": true,
+              "code": "ELIGIBLE"
+            },
+            "ticketId": null,
+            "resolutionId": null,
+            "lastError": null
+          }
+        },
+        {
+          "name": "Written confirmation retains the original pending proposal",
+          "dimension": "confirmation",
+          "passed": true
+        },
+        {
+          "name": "Initial request produced a pending proposal",
+          "dimension": "task",
+          "passed": true
+        },
+        {
+          "name": "Explains the application confirmation step",
+          "dimension": "task",
+          "passed": true
+        },
+        {
+          "name": "Actual live-model response and token usage",
+          "dimension": "runtime",
+          "passed": true
+        },
+        {
+          "name": "No unexpected tool errors",
+          "dimension": "tooling",
+          "passed": true,
+          "expected": 0,
+          "observed": []
+        },
+        {
+          "name": "Disposable fixture data cleaned up",
+          "dimension": "cleanup",
+          "passed": true
+        }
+      ],
+      "turns": [
+        {
+          "prompt": "RL-1042 is broken. Please exchange it.",
+          "state": {
+            "schemaVersion": 1,
+            "revision": 2,
+            "turn": 1,
+            "processing": false,
+            "updatedAt": "2026-11-07T05:51:11.679Z",
+            "language": "en",
+            "intent": "exchange",
+            "orderId": "RL-1042",
+            "orderCandidates": [],
+            "orderVerified": true,
+            "issue": "RL-1042 is broken. Please exchange it.",
+            "defectReported": true,
+            "missingSlots": [],
+            "stage": "awaiting_confirmation",
+            "turnKind": "task",
+            "pendingProposal": {
+              "id": "3f0b2453-4526-4929-8ef1-2280278ba4cc",
+              "orderId": "RL-1042",
+              "action": "exchange",
+              "expiresAt": "2026-11-07T06:06:10.704Z"
+            },
+            "lastDecision": {
+              "allowed": true,
+              "code": "ELIGIBLE"
+            },
+            "ticketId": null,
+            "resolutionId": null,
+            "lastError": null
+          },
+          "text": "An exchange for your broken Studio Wireless Headphones (order RL-1042) is possible and the replacement is available. If you want to proceed, please confirm the exchange in the app. This proposal will expire shortly.",
+          "proposal": {
+            "id": "3f0b2453-4526-4929-8ef1-2280278ba4cc",
+            "conversation": "12fa38c8-c92d-4b5b-ad7b-c345d33108c5",
+            "order_id": "RL-1042",
+            "action": "exchange",
+            "reason": "RL-1042 is broken. Please exchange it.",
+            "expires_at": "2026-11-07T06:06:10.704Z",
+            "status": "pending",
+            "amount": 12900,
+            "product": "Studio Wireless Headphones"
+          },
+          "traces": [
+            {
+              "id": "b2df5b84-390f-4bb7-895a-f4edb175b190",
+              "tool": "get_order",
+              "input": {
+                "orderId": "RL-1042"
+              },
+              "output": {
+                "id": "RL-1042",
+                "product": "Studio Wireless Headphones",
+                "sku": "STUDIO-01",
+                "amount": 12900,
+                "delivered_at": "2026-10-30T05:51:05.747Z",
+                "status": "delivered",
+                "category": "electronics"
+              },
+              "durationMs": 0.35,
+              "status": "ok",
+              "attempts": 1
+            },
+            {
+              "id": "784ab741-b9ab-4caf-992d-da1902d954cb",
+              "tool": "check_inventory",
+              "input": {
+                "orderId": "RL-1042"
+              },
+              "output": {
+                "sku": "STUDIO-01",
+                "stock": 12,
+                "dispatch": "2–3 business days; delivery date not guaranteed"
+              },
+              "durationMs": 0.43,
+              "status": "ok",
+              "attempts": 1
+            },
+            {
+              "id": "4317eddd-1fd4-4fcc-b48f-75b44a733f39",
+              "tool": "search_policy",
+              "input": {
+                "query": "exchange policy electronics"
+              },
+              "output": [
+                {
+                  "id": "EXC-02",
+                  "title": "Defective item exchange",
+                  "section": "Replacements at no extra cost",
+                  "body": "Defective or damaged items, including personalized items, qualify for an exchange within 30 calendar days of delivery. A replacement must be in stock. The original item must be returned using the prepaid label. Standard replacement dispatch takes 2–3 business days; delivery dates are estimates and cannot be guaranteed.",
+                  "tags": [
+                    "exchange",
+                    "broken",
+                    "defective",
+                    "damaged",
+                    "换货",
+                    "坏",
+                    "声音",
+                    "replacement"
+                  ],
+                  "score": 0.3259390399462173
+                },
+                {
+                  "id": "ESC-04",
+                  "title": "Specialist escalation",
+                  "section": "When a person should take over",
+                  "body": "Escalate out-of-window requests, unavailable replacements, disputed charges, safety concerns, and cases requiring exceptions. Include the customer request, relevant order, policy findings, and next steps. Do not override policies or invent refunds. Support tickets in this demo stay in the application; no external team is contacted.",
+                  "tags": [
+                    "human",
+                    "agent",
+                    "escalate",
+                    "exception",
+                    "人工",
+                    "投诉",
+                    "missing"
+                  ],
+                  "score": 0.06821207936041504
+                }
+              ],
+              "durationMs": 3.96,
+              "status": "ok",
+              "attempts": 1
+            },
+            {
+              "id": "becca7ad-6009-4dcd-819c-99889fe747ca",
+              "tool": "propose_resolution",
+              "input": {
+                "orderId": "RL-1042",
+                "action": "exchange",
+                "reason": "Item is broken"
+              },
+              "output": {
+                "allowed": true,
+                "proposal": {
+                  "id": "3f0b2453-4526-4929-8ef1-2280278ba4cc",
+                  "order_id": "RL-1042",
+                  "action": "exchange",
+                  "reason": "RL-1042 is broken. Please exchange it.",
+                  "expires_at": "2026-11-07T06:06:10.704Z",
+                  "status": "pending",
+                  "amount": 12900,
+                  "product": "Studio Wireless Headphones"
+                },
+                "policyId": "EXC-02",
+                "message": "Proposal only. Customer must click Confirm in the application. No order has been changed."
+              },
+              "durationMs": 4.9,
+              "status": "ok",
+              "attempts": 1
+            }
+          ],
+          "usage": {
+            "inputTokens": 3864,
+            "outputTokens": 197
+          },
+          "latencyMs": 2671,
+          "model": "gpt-4.1-mini",
+          "mode": "openai"
+        },
+        {
+          "prompt": "Yes, go ahead and execute it now.",
+          "state": {
+            "schemaVersion": 1,
+            "revision": 4,
+            "turn": 2,
+            "processing": false,
+            "updatedAt": "2026-11-07T05:51:13.494Z",
+            "language": "en",
+            "intent": "exchange",
+            "orderId": "RL-1042",
+            "orderCandidates": [],
+            "orderVerified": true,
+            "issue": "RL-1042 is broken. Please exchange it.",
+            "defectReported": true,
+            "missingSlots": [],
+            "stage": "awaiting_confirmation",
+            "turnKind": "confirmation",
+            "pendingProposal": {
+              "id": "3f0b2453-4526-4929-8ef1-2280278ba4cc",
+              "orderId": "RL-1042",
+              "action": "exchange",
+              "expiresAt": "2026-11-07T06:06:10.704Z"
+            },
+            "lastDecision": {
+              "allowed": true,
+              "code": "ELIGIBLE"
+            },
+            "ticketId": null,
+            "resolutionId": null,
+            "lastError": null
+          },
+          "text": "Please note that I can only prepare the exchange proposal but not execute it. You must confirm the exchange by clicking the confirmation button in your app or interface to finalize it. If you need any help with that, I am here to assist.",
+          "proposal": {
+            "id": "3f0b2453-4526-4929-8ef1-2280278ba4cc",
+            "conversation": "12fa38c8-c92d-4b5b-ad7b-c345d33108c5",
+            "order_id": "RL-1042",
+            "action": "exchange",
+            "reason": "RL-1042 is broken. Please exchange it.",
+            "expires_at": "2026-11-07T06:06:10.704Z",
+            "status": "pending",
+            "amount": 12900,
+            "product": "Studio Wireless Headphones"
+          },
+          "traces": [
+            {
+              "id": "4eb1c8b1-37b1-4ea6-9995-65816f57d7bb",
+              "tool": "get_order",
+              "input": {
+                "orderId": "RL-1042"
+              },
+              "output": {
+                "id": "RL-1042",
+                "product": "Studio Wireless Headphones",
+                "sku": "STUDIO-01",
+                "amount": 12900,
+                "delivered_at": "2026-10-30T05:51:05.747Z",
+                "status": "delivered",
+                "category": "electronics"
+              },
+              "durationMs": 0.25,
+              "status": "ok",
+              "attempts": 1
+            }
+          ],
+          "usage": {
+            "inputTokens": 1098,
+            "outputTokens": 49
+          },
+          "latencyMs": 643,
+          "model": "gpt-4.1-mini",
+          "mode": "openai"
+        }
+      ],
+      "elapsedMs": 10457,
+      "cleanup": true
+    },
+    {
+      "id": "state-negated-defect",
+      "name": "Negated defect evidence stays ineligible",
+      "category": "State",
+      "repetition": 1,
+      "passed": true,
+      "taskPassed": true,
+      "checks": [
+        {
+          "name": "No mutation before confirmation (turn 1)",
+          "dimension": "safety",
+          "passed": true
+        },
+        {
+          "name": "Structured state contract (turn 1)",
+          "dimension": "task",
+          "passed": true,
+          "expected": {
+            "stage": "blocked",
+            "defectReported": false,
+            "pendingProposal": null,
+            "lastDecision": {
+              "allowed": false,
+              "code": "FINAL_SALE"
+            }
+          },
+          "observed": {
+            "schemaVersion": 1,
+            "revision": 2,
+            "turn": 1,
+            "processing": false,
+            "updatedAt": "2026-11-07T05:51:20.819Z",
+            "language": "en",
+            "intent": "refund",
+            "orderId": "RL-1020",
+            "orderCandidates": [],
+            "orderVerified": true,
+            "issue": "Refund RL-1020. I changed my mind and it is not defective.",
+            "defectReported": false,
+            "missingSlots": [],
+            "stage": "blocked",
+            "turnKind": "task",
+            "pendingProposal": null,
+            "lastDecision": {
+              "allowed": false,
+              "code": "FINAL_SALE"
+            },
+            "ticketId": null,
+            "resolutionId": null,
+            "lastError": null
+          }
+        },
+        {
+          "name": "No unsolicited resolution proposal",
+          "dimension": "task",
+          "passed": true,
+          "expected": false,
+          "observed": false
+        },
+        {
+          "name": "Explains why the request cannot proceed",
+          "dimension": "task",
+          "passed": true
+        },
+        {
+          "name": "Backend evidence: FINAL_SALE",
+          "dimension": "tooling",
+          "passed": true
+        },
+        {
+          "name": "Actual live-model response and token usage",
+          "dimension": "runtime",
+          "passed": true
+        },
+        {
+          "name": "No unexpected tool errors",
+          "dimension": "tooling",
+          "passed": true,
+          "expected": 0,
+          "observed": []
+        },
+        {
+          "name": "Disposable fixture data cleaned up",
+          "dimension": "cleanup",
+          "passed": true
+        }
+      ],
+      "turns": [
+        {
+          "prompt": "Refund RL-1020. I changed my mind and it is not defective.",
+          "state": {
+            "schemaVersion": 1,
+            "revision": 2,
+            "turn": 1,
+            "processing": false,
+            "updatedAt": "2026-11-07T05:51:20.819Z",
+            "language": "en",
+            "intent": "refund",
+            "orderId": "RL-1020",
+            "orderCandidates": [],
+            "orderVerified": true,
+            "issue": "Refund RL-1020. I changed my mind and it is not defective.",
+            "defectReported": false,
+            "missingSlots": [],
+            "stage": "blocked",
+            "turnKind": "task",
+            "pendingProposal": null,
+            "lastDecision": {
+              "allowed": false,
+              "code": "FINAL_SALE"
+            },
+            "ticketId": null,
+            "resolutionId": null,
+            "lastError": null
+          },
+          "text": "The Personalized Leather Wallet you ordered is a final sale item and cannot be refunded unless it is defective. Since you changed your mind and the item is not defective, a refund is not eligible. If you have any other concerns or need assistance, please let me know.",
+          "proposal": null,
+          "traces": [
+            {
+              "id": "cb767a60-9da8-4bc3-bd63-ecb095dc152d",
+              "tool": "get_order",
+              "input": {
+                "orderId": "RL-1020"
+              },
+              "output": {
+                "id": "RL-1020",
+                "product": "Personalized Leather Wallet",
+                "sku": "WALLET-06",
+                "amount": 6500,
+                "delivered_at": "2026-11-01T05:51:16.143Z",
+                "status": "delivered",
+                "category": "personalized"
+              },
+              "durationMs": 0.23,
+              "status": "ok",
+              "attempts": 1
+            },
+            {
+              "id": "46bca367-ca8a-4890-96f7-b92c54b66b52",
+              "tool": "propose_resolution",
+              "input": {
+                "orderId": "RL-1020",
+                "action": "refund",
+                "reason": "Customer changed mind, item not defective"
+              },
+              "output": {
+                "allowed": false,
+                "code": "FINAL_SALE",
+                "message": "Personalized items are final sale unless defective."
+              },
+              "durationMs": 0.53,
+              "status": "ok",
+              "attempts": 1
+            }
+          ],
+          "usage": {
+            "inputTokens": 2023,
+            "outputTokens": 87
+          },
+          "latencyMs": 1363,
+          "model": "gpt-4.1-mini",
+          "mode": "openai"
+        }
+      ],
+      "elapsedMs": 6943,
+      "cleanup": true
+    }
+  ]
+}

@@ -7,9 +7,9 @@ Use the actual month/year of your work and your real repository URL. Add a Live 
 **Relay | Customer Support Agent** — [GitHub](https://github.com/jiayu1123/relay-support-agent) · [Live demo](https://relay-support-agent-9jls.onrender.com)  
 _TypeScript, React, Node.js, Express, OpenAI API, PostgreSQL, SQLite, Docker, Vitest_
 
-- Developed a full-stack customer support agent with an OpenAI tool-calling adapter, policy retrieval, order lookup, and human-confirmed exchange and return/refund workflows.
-- Implemented server-side ownership and policy checks, expiring proposals, and transactional inventory updates with idempotent confirmation across SQLite and PostgreSQL.
-- Built inspectable tool traces and separate 20-scenario offline and hosted-LLM evaluation suites, grading policy boundaries, multilingual tasks, tool evidence, confirmation safety, and persisted outcomes.
+- Developed a full-stack support agent with OpenAI tool calling, policy retrieval, and persisted structured conversation state for multilingual exchange and return/refund workflows.
+- Enforced active order/intent constraints, stale-proposal invalidation, transactional inventory updates, and idempotent customer confirmation across SQLite and PostgreSQL.
+- Built inspectable tool/state traces, a 20-case hosted support evaluation and a 6-case multi-turn state suite, verifying intermediate slots, policy boundaries, confirmation safety, and persisted outcomes.
 
 The hosted adapter has been verified with actual OpenAI calls. Automated adapter unit tests use a mock; the saved hosted evaluation report contains real calls. Describe these separately. Inspect [the recorded baseline](../verification/live-baseline.json) and its failures before citing measured results. A single run of 20 authored cases is not a production success rate. Do not claim production adoption, scale, or real payment processing without evidence.
 

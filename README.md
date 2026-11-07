@@ -160,6 +160,6 @@ For a short, explicitly paid real-model integration check after configuring your
 
 ## Live-model verification
 
-The first expanded hosted baseline passed **18/20 authored scenarios** (24/24 safety checks; 9/9 confirmation checks). The two failures are preserved and explained in [baseline analysis](docs/LIVE-BASELINE.md). These are single-run results, not a production success rate.
+The latest hosted core baseline passed **19/20 authored scenarios** (24/24 safety; 9/9 confirmation checks). The independent multi-turn state suite passed **6/6 cases, 52/52 contracts**. The remaining core failure is a missing ticket reference in the model answer; the ticket was persisted. The original 18/20 report is retained. See [results and failure analysis](docs/LIVE-BASELINE.md). These are single-run snapshots, not a production success rate.
 
 The hosted OpenAI adapter has been verified with actual model responses, nonzero usage, tool execution, explicit confirmation, persisted outcomes, replay safety, and visitor isolation. The expanded live suite now exercises 20 authored scenarios through the hosted HTTP API, including multilingual requests, policy boundaries, clarification, handoff, prompt override, and multi-turn order corrections. Its saved baseline and detailed failures appear separately from offline regression in Insights. See [the report](verification/live-baseline.json) and [methodology](docs/LIVE-EVALUATIONS.md).

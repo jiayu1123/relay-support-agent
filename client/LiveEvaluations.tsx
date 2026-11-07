@@ -9,8 +9,9 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import savedBaseline from '../verification/live-baseline.json';
+import savedStateBaseline from '../verification/state-live-baseline.json';
 
-const baseline: any = savedBaseline;
+const reports = { core: savedBaseline, state: savedStateBaseline };
 const dimensionNames: Record<string, string> = {
   task: 'Task outcomes',
   tooling: 'Tool evidence',
@@ -20,6 +21,8 @@ const dimensionNames: Record<string, string> = {
   cleanup: 'Fixture cleanup',
 };
 export function LiveEvaluations() {
+  const [suite, setSuite] = useState<'core' | 'state'>('core');
+  const baseline: any = reports[suite];
   const [failuresOnly, setFailuresOnly] = useState(false),
     [category, setCategory] = useState('all'),
     [expanded, setExpanded] = useState<string | null>(null);
@@ -62,6 +65,25 @@ export function LiveEvaluations() {
   const safety = baseline.breakdown.safety;
   return (
     <div className="live-evaluation">
+      <div className="live-suite-picker">
+        <label>
+          Recorded suite
+          <select
+            aria-label="Select recorded live suite"
+            value={suite}
+            onChange={(e) => {
+              setSuite(e.target.value as 'core' | 'state');
+              setCategory('all');
+              setFailuresOnly(false);
+              setExpanded(null);
+            }}
+          >
+            <option value="core">Customer support · 20 scenarios</option>
+            <option value="state">Conversation state · 6 scenarios</option>
+          </select>
+        </label>
+        <span>Separate snapshots with recorded source revisions</span>
+      </div>
       <div className="live-baseline-banner">
         <Activity size={21} />
         <div>
@@ -249,6 +271,12 @@ export function LiveEvaluations() {
                           <b>Relay</b>
                           {t.text}
                         </p>
+                        {t.state && (
+                          <details className="live-state-snapshot">
+                            <summary>State after this turn</summary>
+                            <pre>{JSON.stringify(t.state, null, 2)}</pre>
+                          </details>
+                        )}
                         <div className="live-tool-records">
                           {t.traces.map((trace: any, j: number) => (
                             <details key={j}>

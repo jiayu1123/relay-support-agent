@@ -61,3 +61,9 @@ npm run eval:live -- --suite=state --base-url=https://relay-support-agent-9jls.o
 ```
 
 It runs six authored cases with 12 real model turns, checking intermediate state snapshots, tool outcomes, no unconfirmed changes and stale/cancelled proposal rejection. Failed contracts remain in the report. Use `--suite=core` (default) for the existing 20-case suite. Both suites record the actual evaluated source revision; one run is not a production success rate.
+
+## First hosted state-suite result
+
+Revision `963d7e5740e6c6105f3e7ae428b1fc839806d8aa` completed the first real state suite with `gpt-4.1-mini`: **6/6 cases, 52/52 contracts, 12 model turns**, including **12/12 no-unconfirmed-change checks**, cancelled/superseded-proposal denial and written-yes preservation. P50/P95 agent-turn latency: **1,614/2,765 ms**. Observed usage: **26,586 input + 1,056 output tokens**. All six disposable fixture accounts were cleaned up; source/model remained stable. No cases were retried to improve the score. See [full evidence](../verification/state-live-baseline.json).
+
+This single authored run supports these specific behaviors, not a general reliability or production success claim. Inspect **Insights → Live model baseline → Conversation state** for the saved case results and intermediate state JSON.
