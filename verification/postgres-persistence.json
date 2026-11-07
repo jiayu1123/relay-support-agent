@@ -1,0 +1,73 @@
+{
+  "verifiedAt": "2026-11-07T06:19:25.348Z",
+  "checks": {
+    "sameConversation": true,
+    "sameResolution": true,
+    "sameProposal": true,
+    "sameOrderStatus": true,
+    "sameStock": true,
+    "sameState": true,
+    "postgres": true,
+    "databaseSession": true,
+    "savedOfflineReport": true,
+    "idempotentReplay": true
+  },
+  "cookieFlags": {
+    "httpOnly": true,
+    "secure": true,
+    "sameSiteLax": true,
+    "opaqueV2": true
+  },
+  "healthBefore": {
+    "ok": true,
+    "mode": "openai",
+    "database": "postgres",
+    "model": "gpt-4.1-mini",
+    "llmConfigured": true,
+    "revision": "78add850df506d3bae9069b28e6ce5387e38b001",
+    "conversationStateVersion": 1,
+    "sessionVersion": 2,
+    "sessionStorage": "database"
+  },
+  "healthAfter": {
+    "ok": true,
+    "mode": "openai",
+    "database": "postgres",
+    "model": "gpt-4.1-mini",
+    "llmConfigured": true,
+    "revision": "78add850df506d3bae9069b28e6ce5387e38b001",
+    "conversationStateVersion": 1,
+    "sessionVersion": 2,
+    "sessionStorage": "database"
+  },
+  "preparedAt": "2026-11-07T06:17:19.446Z",
+  "expected": {
+    "resolutionId": "RES-6A9C2C34",
+    "proposalId": "69141b4c-b568-4216-b7f1-6278ee0f0341",
+    "messages": 3,
+    "orderStatus": "exchange_requested",
+    "stock": 11,
+    "stateStage": "resolved",
+    "turn": 1,
+    "offlineReportId": "8dd4ed73-7b93-42b3-a61c-3ac88e1cea91"
+  },
+  "usage": {
+    "inputTokens": 2220,
+    "outputTokens": 119
+  },
+  "cutoverDeployId": "dep-dbnc4brrjlhs738ch0g0",
+  "verifiedRedeployId": "dep-dbnc5fbm8hqs73bq1qe0",
+  "fixtureCleanup": true,
+  "databaseResourceId": "dpg-dbnbv0k9v7es73cbe1l0-a",
+  "databasePlan": "free",
+  "databaseExpiresAt": "2026-12-07T06:04:50.851106Z",
+  "blueprintId": "exs-dbnc3gqjnfac73bvc5o0",
+  "notes": [
+    "A real OpenAI turn created the pending proposal; the dedicated confirmation endpoint persisted the sample exchange.",
+    "The same private HttpOnly cookie restored all asserted records after a second Render deployment became live.",
+    "Both deployments ran the same application source; distinct deploy IDs and native live status establish the observed redeployment.",
+    "No cookie, token hash, database password or connection URL is exported.",
+    "The disposable fixture and its session were deleted after verification.",
+    "Free PostgreSQL expiry and web-service cold starts remain applicable."
+  ]
+}

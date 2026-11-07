@@ -1,6 +1,6 @@
 # Deployment
 
-The delivered application is a standard Node service with a Vite-built client. The service serves both `/api` and built frontend assets. The verified public demo is https://relay-support-agent-9jls.onrender.com, deployed on Render with OpenAI tool calling. See `verification/live-deployment.json` for the latest hosted workflow checks.
+The delivered application is a standard Node service with a Vite-built client. The service serves both `/api` and built frontend assets. The verified public demo is https://relay-support-agent-9jls.onrender.com, deployed on Render with OpenAI tool calling. PostgreSQL/session continuity is recorded in `verification/postgres-persistence.json`; older model smoke checks remain in `verification/live-deployment.json`.
 
 ## Option A: Node host + PostgreSQL
 
@@ -8,8 +8,8 @@ Use a host that supports **Node 24**, a long-running HTTP process, and a managed
 
 1. Push this source to your own repository.
 2. Configure build command `npm ci && npm run build` and start command `npm start`.
-3. Set `DATABASE_URL` to the managed database connection URL.
-4. Set a persistent, random `SESSION_SECRET`.
+3. Set `DATABASE_URL` to the managed database connection URL and `REQUIRE_POSTGRES=true` to reject accidental SQLite fallback.
+4. Preserve an existing `SESSION_SECRET` for legacy-cookie migration. New opaque sessions live in the database, independent of the app process or signing key.
 5. Set `APP_ORIGIN` to the exact HTTPS origin, without a trailing slash, and `COOKIE_SECURE=true`.
 6. Start with `AGENT_MODE=demo`, verify the site, then configure server-side `OPENAI_API_KEY`, `OPENAI_MODEL`, and `AGENT_MODE=openai`.
 7. Inspect health, execute one complete confirmed workflow, verify persistence after a restart, and run live-model evaluations separately.

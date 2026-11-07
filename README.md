@@ -4,7 +4,7 @@
 
 **[Open the live demo](https://relay-support-agent-9jls.onrender.com)** · [Source code](https://github.com/jiayu1123/relay-support-agent)
 
-The public demo is running on Render with **OpenAI tool calling (`gpt-4.1-mini`)**. Visitors do not need to supply an API key. It executes sample-store database workflows after explicit confirmation; no real payments are processed. The free instance may take time to wake after inactivity, and sample data resets on instance replacement. Live-model usage is charged to the configured API project.
+The public demo is running on Render with **OpenAI tool calling (`gpt-4.1-mini`)**. Visitors do not need to supply an API key. It executes sample-store database workflows after explicit confirmation; no real payments are processed. The free web instance may take time to wake after inactivity. Conversations, orders and opaque browser sessions now persist in managed PostgreSQL across app deployments; the chosen Free database expires **December 7, 2026**. Live-model usage is charged to the configured API project.
 
 Relay is a full-stack portfolio project for a fictional ecommerce store. An agent investigates order issues, retrieves store policies, prepares exchange or return/refund proposals, and hands difficult cases to an internal specialist queue. Order changes require an explicit customer confirmation and a fresh server-side eligibility check.
 
@@ -31,7 +31,7 @@ npm run build
 npm start
 ```
 
-Open **http://localhost:3001**. SQLite creates its local database automatically. Set a persistent `SESSION_SECRET` in `.env` to preserve demo sessions across server restarts. Generate a value with `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`.
+Open **http://localhost:3001**. SQLite creates its local database automatically. V2 browser sessions persist in the database across server restarts. Keep an existing `SESSION_SECRET` for legacy-cookie migration; new opaque sessions do not depend on an in-memory signing key. Generate a value with `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`.
 
 ## Agent Studio interface
 
@@ -74,7 +74,7 @@ Other scenarios: refund `RL-1043`, out-of-window `RL-1031`, undelivered `RL-1050
 
 ## PostgreSQL and stable sessions
 
-The app supports database-backed opaque browser sessions, rolling expiry and automatic restoration of the last owned conversation after refresh. The existing-service PostgreSQL cutover is specified in [the deployment and session guide](docs/POSTGRES-SESSIONS.md); the provisioned Free database expires December 7, 2026. Confirm `/api/health` reports `postgres` before treating the cutover as live.
+The app supports database-backed opaque browser sessions, rolling expiry and automatic restoration of the last owned conversation after refresh. The existing service is live on PostgreSQL; a hosted confirmation workflow and session were restored after a second actual Render deployment. See [evidence](verification/postgres-persistence.json) and [the deployment and session guide](docs/POSTGRES-SESSIONS.md). The chosen Free database expires December 7, 2026.
 
 ## Structured conversation state
 

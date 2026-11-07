@@ -1,6 +1,6 @@
 # Hosted PostgreSQL and stable anonymous sessions
 
-Relay supports a managed PostgreSQL database for conversations, structured state, orders, proposals, resolutions, tickets, evaluations and browser sessions. Its existing SQLite mode remains available for local development. Switching a hosted service to PostgreSQL must be verified through `/api/health`; adding a database resource alone does not switch the running application.
+The public Relay service is now connected to managed PostgreSQL, verified by hosted health and a real cross-deployment persistence check. Relay uses the database for conversations, structured state, orders, proposals, resolutions, tickets, evaluations and browser sessions. Its existing SQLite mode remains available for local development. Switching a hosted service to PostgreSQL must be verified through `/api/health`; adding a database resource alone does not switch the running application.
 
 ## Chosen infrastructure
 
@@ -46,4 +46,12 @@ Automated tests cover hash-only storage, renewal and absolute expiry, legacy upg
 
 Browser QA runs the built app, confirms a request, actually stops/restarts the server twice, reloads without manually selecting the conversation, checks saved order/stock/state, and verifies isolation, mobile layout and logout recovery.
 
-After applying the reviewed infrastructure plan, verify the actual managed database with a disposable signed fixture: save a multi-turn conversation, preserve its cookie privately, deploy/restart the web service, and restore the same conversation and state. Record the observed revision, database dialect and cookie flags; never commit the cookie or database URL. Do not claim this hosted continuity check passed until it has run.
+For future deployments, verify the actual managed database with a disposable signed fixture: save a multi-turn conversation, preserve its cookie privately, deploy/restart the web service, and restore the same conversation and state. Record the observed revision, database dialect and cookie flags; never commit the cookie or database URL. Do not claim this hosted continuity check passed until it has run.
+
+## Observed hosted cutover and continuity
+
+The reviewed Blueprint was explicitly approved by the user and applied to existing resource IDs. Cutover deploy `dep-dbnc4brrjlhs738ch0g0` became live on source `78add850df506d3bae9069b28e6ce5387e38b001`. HTTPS health reported `database: postgres`, session version 2, database session storage and the existing OpenAI model configuration.
+
+A disposable fixture used one real OpenAI turn to prepare an exchange and the explicit confirmation endpoint to save it. The hosted offline regression passed 20/20 on the actual managed PostgreSQL instance. After redeploy `dep-dbnc5fbm8hqs73bq1qe0` became live on the same source, the same private browser cookie restored the conversation, three messages, exact saved resolution and proposal, structured state, order status, stock and saved evaluation report. Confirmation replay reused the same resolution. The fixture and session were then deleted. See [full redacted evidence](../verification/postgres-persistence.json).
+
+The infrastructure Blueprint remains `autoSync: false` (shown as paused in Render), meaning automatic configuration syncing is paused, not that the running app or database is stopped. The existing application URL is unchanged. Secrets stayed inside Render's `fromDatabase` binding; no connection URL was copied into this repository or chat.

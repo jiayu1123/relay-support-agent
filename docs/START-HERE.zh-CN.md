@@ -20,13 +20,13 @@ Windows PowerShell 可以把第二行改为 `Copy-Item .env.example .env`。浏�
 
 默认不需要密钥。演示引擎通过确定性规则识别意图，但订单查询、政策检查、库存、确认与写库都是真实后端实现，不是前端播放预设动画。
 
-推荐先生成一个随机值放进 `.env` 的 `SESSION_SECRET`，这样服务器重启后，同一个浏览器仍可恢复原来的演示账户：
+新版会话令牌的哈希保存在数据库中；数据库和浏览器 Cookie 保留时，服务重启后仍可恢复。已有 `SESSION_SECRET` 请保留，用于旧版 Cookie 迁移。需要为旧版兼容配置随机签名值时，可使用：
 
 ```bash
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
 
-这是会话签名值，与 OpenAI API 密钥不同。不要把 `.env` 提交到 GitHub。
+这是旧版会话的兼容签名值，与 OpenAI API 密钥不同。不要把 `.env` 提交到 GitHub。线上已接入 PostgreSQL 并验证跨部署恢复；本次选择的免费数据库会在 2026 年 12 月 7 日到期，需在到期前升级或导出。详见 [数据库与会话说明](POSTGRES-SESSIONS.md)。
 
 ## 2. 接入真实模型
 
