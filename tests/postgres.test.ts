@@ -127,3 +127,74 @@ it.skipIf(!process.env.TEST_DATABASE_URL)(
     }
   },
 );
+
+it.skipIf(!process.env.TEST_DATABASE_URL)(
+  'PostgreSQL: opaque sessions survive independent app connections, secret changes, and revocation',
+  async () => {
+    const request = (await import('supertest')).default;
+    const { createApp } = await import('../server/app.js');
+    const db = await connect(process.env.TEST_DATABASE_URL),
+      other = await connect(process.env.TEST_DATABASE_URL);
+    let tenant: string | undefined;
+    try {
+      await Promise.all([migrate(db), migrate(other)]);
+      const first = request.agent(createApp(db, { mode: 'demo', secret: 'previous signing key' }));
+      const c = await first
+        .post('/api/conversations')
+        .send({ title: 'Restart continuity' })
+        .expect(201);
+      const cookie = c.headers['set-cookie'][0].split(';')[0];
+      tenant = c.body.tenant;
+      await first
+        .post(`/api/conversations/${c.body.id}/messages`)
+        .send({ content: 'My RL-1042 headphones are broken. Please exchange them.' })
+        .expect(200);
+      const next = createApp(other, { mode: 'demo', secret: 'different signing key' });
+      const restored = await request(next)
+        .get(`/api/conversations/${c.body.id}`)
+        .set('Cookie', cookie)
+        .expect(200);
+      expect(restored.body.state.stage).toBe('awaiting_confirmation');
+      expect(restored.body.messages).toHaveLength(2);
+      const p = restored.body.state.pendingProposal.id;
+      const resolution = await request(next)
+        .post(`/api/proposals/${p}/confirm`)
+        .set('Cookie', cookie)
+        .send({ confirmed: true })
+        .expect(200);
+      const read = await first.get(`/api/conversations/${c.body.id}`).expect(200);
+      expect(read.body.state.resolutionId).toBe(resolution.body.id);
+      await request(next).post('/api/session/logout').set('Cookie', cookie).send({}).expect(204);
+      // Resolving an expired/revoked cookie starts a separate anonymous account.
+      const { sessions } = await import('../server/sessions.js');
+      const replacement = await sessions(other).resolve(cookie.slice('relay_session='.length));
+      expect(replacement.tenant).not.toBe(tenant);
+      await other.query('DELETE FROM sessions WHERE tenant=?', [replacement.tenant]);
+      await other.query('DELETE FROM inventory WHERE tenant=?', [replacement.tenant]);
+      await other.query('DELETE FROM orders WHERE tenant=?', [replacement.tenant]);
+      await other.query('DELETE FROM tenants WHERE id=?', [replacement.tenant]);
+    } finally {
+      if (tenant)
+        await db.transaction(async (tx) => {
+          for (const table of [
+            'sessions',
+            'conversation_states',
+            'messages',
+            'tickets',
+            'proposals',
+            'resolutions',
+            'conversations',
+            'inventory',
+            'orders',
+            'tenants',
+          ])
+            await tx.query(
+              `DELETE FROM ${table} WHERE ${table === 'tenants' ? 'id' : 'tenant'}=?`,
+              [tenant],
+            );
+        });
+      await other.close();
+      await db.close();
+    }
+  },
+);

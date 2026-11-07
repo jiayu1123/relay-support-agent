@@ -2,11 +2,11 @@ import express from 'express';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import { rateLimit } from 'express-rate-limit';
-import { randomUUID, createHmac, timingSafeEqual, randomBytes } from 'node:crypto';
+import { randomUUID } from 'node:crypto';
 import { resolve } from 'node:path';
 import { z } from 'zod';
 import type { Store } from './db.js';
-import { seed } from './db.js';
+import { sessions, publicSession, SESSION_COOKIE, type Session } from './sessions.js';
 import { AppError, confirmResolution, ownedConversation, type Context } from './tools.js';
 import { runAgent, type Turn } from './agent.js';
 import {
@@ -23,7 +23,7 @@ export function createApp(
   options: { mode?: string; secret?: string; staticDir?: string } = {},
 ) {
   const app = express();
-  const secret = options.secret || process.env.SESSION_SECRET || randomBytes(32).toString('hex');
+  const sessionStore = sessions(db, options.secret || process.env.SESSION_SECRET);
   const mode = options.mode || process.env.AGENT_MODE || 'demo';
   // Render terminates TLS at its reverse proxy. Trust only the immediate hop.
   if (process.env.RENDER === 'true') app.set('trust proxy', 1);
@@ -46,17 +46,32 @@ export function createApp(
     }),
   );
   app.use(express.json({ limit: '16kb' }), cookieParser());
-  app.get('/api/health', (_req, res) =>
-    res.json({
-      ok: true,
+  app.get('/api/health', async (_req, res) => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const metadata = {
       mode,
       database: db.dialect,
       model: mode === 'demo' ? 'deterministic-demo-v1' : process.env.OPENAI_MODEL || 'gpt-4.1-mini',
       llmConfigured: mode === 'openai' && Boolean(process.env.OPENAI_API_KEY),
       revision: process.env.RENDER_GIT_COMMIT || null,
       conversationStateVersion: 1,
-    }),
-  );
+      sessionVersion: 2,
+      sessionStorage: 'database',
+    };
+    try {
+      await Promise.race([
+        db.query('SELECT 1 AS ready'),
+        new Promise((_, reject) => {
+          timer = setTimeout(() => reject(new Error('readiness timeout')), 2000);
+        }),
+      ]);
+      res.json({ ok: true, ...metadata });
+    } catch {
+      res.status(503).json({ ok: false, ...metadata });
+    } finally {
+      if (timer) clearTimeout(timer);
+    }
+  });
   app.use(
     '/api',
     rateLimit({ windowMs: 60000, limit: 90, standardHeaders: 'draft-8', legacyHeaders: false }),
@@ -72,60 +87,41 @@ export function createApp(
         throw new AppError(403, 'ORIGIN_REJECTED', 'Cross-origin requests are not allowed.');
     }
   }
-  function issueSession(res: express.Response, tenant: string) {
-    const payload = `${tenant}.${Date.now() + 7 * 86400000}`;
-    res.cookie(
-      'relay_session',
-      `${payload}.${createHmac('sha256', secret).update(payload).digest('hex')}`,
-      {
-        httpOnly: true,
-        sameSite: 'lax',
-        secure: process.env.COOKIE_SECURE === 'true',
-        maxAge: 7 * 86400000,
-        path: '/',
-      },
-    );
+  function issueSession(res: express.Response, session: Session) {
+    if (!session.cookie) return;
+    res.cookie(SESSION_COOKIE, session.cookie, {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: process.env.RENDER === 'true' || process.env.COOKIE_SECURE === 'true',
+      maxAge: Math.max(0, Date.parse(session.expiresAt) - Date.now()),
+      path: '/',
+    });
   }
-  // Run remote checks in disposable signed accounts, separate from browser demo accounts.
   app.post('/api/evaluation-fixtures', async (req, res) => {
     assertOrigin(req);
     z.object({}).strict().parse(req.body);
-    const tenant = `evaluation-${randomUUID()}`;
-    await seed(db, tenant);
-    issueSession(res, tenant);
+    const session = await sessionStore.create(`evaluation-${randomUUID()}`);
+    issueSession(res, session);
     res.status(201).json({ fixture: true });
   });
   app.use('/api', async (req, res, next) => {
     try {
-      // Browser cross-origin writes are rejected; scripts may use a valid cookie without Origin.
       assertOrigin(req);
-      let tenant = '';
-      const raw = req.cookies.relay_session as string | undefined;
-      if (raw) {
-        const [id, expires, sig] = raw.split('.');
-        const payload = `${id}.${expires}`;
-        const expected = createHmac('sha256', secret).update(payload).digest('hex');
-        if (
-          id &&
-          expires &&
-          sig &&
-          sig.length === expected.length &&
-          /^[0-9a-f]+$/.test(sig) &&
-          timingSafeEqual(Buffer.from(sig), Buffer.from(expected)) &&
-          Number(expires) > Date.now()
-        )
-          tenant = id;
-      }
-      if (!tenant) {
-        tenant = randomUUID();
-        issueSession(res, tenant);
-      }
-      await seed(db, tenant);
-      res.locals.tenant = tenant;
+      const session = await sessionStore.resolve(req.cookies[SESSION_COOKIE]);
+      issueSession(res, session);
+      res.locals.session = session;
+      res.locals.tenant = session.tenant;
       next();
-    } catch (e) {
-      next(e);
+    } catch (error) {
+      next(error);
     }
+  });
+  app.get('/api/session', (_req, res) => res.json(publicSession(res.locals.session)));
+  app.post('/api/session/logout', async (req, res) => {
+    z.object({}).strict().parse(req.body);
+    await sessionStore.revoke(res.locals.session);
+    res.clearCookie(SESSION_COOKIE, { path: '/' });
+    res.status(204).end();
   });
   app.delete('/api/evaluation-fixtures/current', async (_req, res) => {
     const tenant = res.locals.tenant as string;
@@ -137,6 +133,7 @@ export function createApp(
       );
     await db.transaction(async (tx) => {
       for (const table of [
+        'sessions',
         'conversation_states',
         'messages',
         'proposals',
@@ -176,6 +173,7 @@ export function createApp(
       [t],
     );
     res.json({
+      session: publicSession(res.locals.session),
       customer: { name: 'Alex Morgan', email: 'alex@example.test', label: 'Isolated demo account' },
       mode,
       model: mode === 'demo' ? 'deterministic-demo-v1' : process.env.OPENAI_MODEL || 'gpt-4.1-mini',

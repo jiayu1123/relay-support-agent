@@ -34,7 +34,7 @@ The state reducer uses bounded English/Chinese slot rules over customer messages
 
 A per-conversation PostgreSQL row lock (or the SQLite transaction queue) serializes turn admission, proposal invalidation and customer confirmation. Model/network calls occur outside the transaction. The persisted processing flag rejects simultaneous turns across app instances; revision checks reject stale workers. A signed tenant scope applies to both state reads and writes. `GET /api/conversations/:id` returns current state only after conversation ownership verification. There is no public state-edit endpoint.
 
-Legacy conversations are bootstrapped from customer messages and authoritative proposal rows. New tables are additive and support SQLite/PostgreSQL. State is durable only as long as its database: the current free Render deployment still uses ephemeral SQLite, so an instance replacement can reset sample data. Use existing PostgreSQL support for durability across deploys.
+Legacy conversations are bootstrapped from customer messages and authoritative proposal rows. New tables are additive and support SQLite/PostgreSQL. State is durable only as long as its database. SQLite on Render is ephemeral; the [managed PostgreSQL and session cutover](POSTGRES-SESSIONS.md) provides cross-deploy storage after it is applied and verified. The chosen Free database expires December 7, 2026.
 
 The parser is deliberately limited, not a general semantic understanding guarantee. More paraphrases, pronoun ambiguity, negation, unusual defects and multi-order tasks need additional labeled cases. No real customer authentication or production adoption is implied.
 

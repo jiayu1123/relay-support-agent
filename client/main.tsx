@@ -33,6 +33,7 @@ import {
   LayoutDashboard,
 } from 'lucide-react';
 import { api } from './api';
+import { readWorkspace, saveWorkspace, type WorkspacePage } from './workspace-memory';
 import './style.css';
 import './studio.css';
 import { Overview } from './Overview';
@@ -41,7 +42,7 @@ import { ConversationStateCard } from './ConversationStateCard';
 import type { ConversationState } from '../server/conversation-state';
 
 type Message = { id: string; role: string; content: string; metadata: any; created_at: string };
-type Page = 'overview' | 'workspace' | 'orders' | 'knowledge' | 'evaluations' | 'architecture';
+type Page = WorkspacePage;
 const cash = (c: number) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(c / 100);
 const human = (s: string) => s.replaceAll('_', ' ');
@@ -73,8 +74,10 @@ const samples = [
 ];
 
 function App() {
+  const remembered = useRef(readWorkspace());
+  const [restoring, setRestoring] = useState(true);
   const [data, setData] = useState<any>(null),
-    [page, setPage] = useState<Page>('overview'),
+    [page, setPage] = useState<Page>(remembered.current.page),
     [conversation, setConversation] = useState<string | null>(null),
     [messages, setMessages] = useState<Message[]>([]),
     [conversationState, setConversationState] = useState<ConversationState | null>(null),
@@ -96,8 +99,32 @@ function App() {
     return d;
   }
   useEffect(() => {
-    refresh().catch((e) => setError(e.message));
+    let active = true;
+    refresh()
+      .then(async (d) => {
+        const id = remembered.current.conversation;
+        if (id && d.conversations.some((c: any) => c.id === id)) {
+          const saved = await api(`/conversations/${id}`);
+          if (active) {
+            setConversation(id);
+            setMessages(saved.messages);
+            setConversationState(saved.state);
+          }
+        }
+      })
+      .catch((e) => {
+        if (active) setError(e.message);
+      })
+      .finally(() => {
+        if (active) setRestoring(false);
+      });
+    return () => {
+      active = false;
+    };
   }, []);
+  useEffect(() => {
+    if (data && !restoring) saveWorkspace({ page, conversation });
+  }, [page, conversation, data, restoring]);
   useEffect(() => {
     const container = chatScroll.current;
     if (page !== 'workspace' || !container) return;
@@ -249,7 +276,7 @@ function App() {
   const proposalIds = messages
     .filter((m) => m.metadata?.proposal)
     .map((m) => m.metadata.proposal.id);
-  if (!data)
+  if (!data || restoring)
     return (
       <div className="loading">
         <div className="brand-mark">r</div>
@@ -372,7 +399,10 @@ function App() {
                 </select>
               </label>
               <span className="history-note">
-                <ShieldCheck size={14} /> Your sample account is isolated
+                <ShieldCheck size={14} />{' '}
+                {data.database === 'postgres'
+                  ? 'Conversation saved in PostgreSQL'
+                  : 'Your sample account is isolated'}
               </span>
             </div>
             <div className="playground">

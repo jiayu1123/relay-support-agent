@@ -72,6 +72,10 @@ Never commit `.env` or enter keys in browser code. The app does not ask visitors
 
 Other scenarios: refund `RL-1043`, out-of-window `RL-1031`, undelivered `RL-1050`, final-sale `RL-1020`, or Chinese exchange requests.
 
+## PostgreSQL and stable sessions
+
+The app supports database-backed opaque browser sessions, rolling expiry and automatic restoration of the last owned conversation after refresh. The existing-service PostgreSQL cutover is specified in [the deployment and session guide](docs/POSTGRES-SESSIONS.md); the provisioned Free database expires December 7, 2026. Confirm `/api/health` reports `postgres` before treating the cutover as live.
+
 ## Structured conversation state
 
 Relay saves the active order, intent, reported issue, missing information, pending proposal, and workflow stage independently of chat history. Switching orders clears old defect evidence; cancelling or changing the task immediately revokes the old confirmation card. Open **Playground → Execution trace → Conversation state** to inspect current slots. See [state design and multi-turn demo](docs/CONVERSATION-STATE.md).

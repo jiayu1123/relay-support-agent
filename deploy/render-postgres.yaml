@@ -1,0 +1,37 @@
+# Existing production resources in My Workspace, Virginia.
+# Adopt only after reviewing Render's plan. No API keys or database passwords are stored here.
+# Free PostgreSQL expires 2026-12-07; this does not upgrade either resource to a paid plan.
+services:
+  - type: web
+    name: relay-support-agent
+    runtime: node
+    region: virginia
+    plan: free
+    repo: https://github.com/jiayu1123/relay-support-agent
+    branch: main
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeployTrigger: 'off'
+    envVars:
+      - key: NODE_VERSION
+        value: '24'
+      - key: NODE_ENV
+        value: production
+      - key: COOKIE_SECURE
+        value: 'true'
+      - key: REQUIRE_POSTGRES
+        value: 'true'
+      - key: DATABASE_URL
+        fromDatabase:
+          name: relay-support-agent-db
+          property: connectionString
+    # Existing OPENAI_API_KEY, OPENAI_MODEL, AGENT_MODE and SESSION_SECRET are preserved.
+databases:
+  - name: relay-support-agent-db
+    plan: free
+    region: virginia
+    postgresMajorVersion: '17'
+    databaseName: relay_support_agent_db
+    user: relay_support_agent_db_user
+    ipAllowList: []

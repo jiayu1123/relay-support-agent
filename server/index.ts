@@ -2,6 +2,8 @@ import 'dotenv/config';
 import { resolve } from 'node:path';
 import { connect, migrate } from './db.js';
 import { createApp } from './app.js';
+if (process.env.REQUIRE_POSTGRES === 'true' && !process.env.DATABASE_URL)
+  throw new Error('DATABASE_URL is required when REQUIRE_POSTGRES=true. Refusing SQLite fallback.');
 const db = await connect(process.env.DATABASE_URL, process.env.SQLITE_PATH || 'data/relay.sqlite');
 await migrate(db);
 if ((process.env.AGENT_MODE || 'demo') === 'openai' && !process.env.OPENAI_API_KEY)

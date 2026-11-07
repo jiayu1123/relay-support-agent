@@ -13,7 +13,15 @@ export interface Store extends SQL {
 }
 export async function connect(url?: string, file = 'data/relay.sqlite'): Promise<Store> {
   if (url) {
-    const pool = new pg.Pool({ connectionString: url, max: 8 });
+    const pool = new pg.Pool({
+      connectionString: url,
+      max: 5,
+      connectionTimeoutMillis: 3000,
+      idleTimeoutMillis: 30000,
+      statement_timeout: 10000,
+    });
+    // An idle connection failure must not become an unhandled event or expose credentials.
+    pool.on('error', () => console.error(JSON.stringify({ event: 'database_pool_error' })));
     const adapt = (db: pg.Pool | pg.PoolClient): SQL => ({
       async query(sql, params = []) {
         let i = 0;
@@ -92,6 +100,9 @@ export async function migrate(db: Store) {
   const statements = [
     'CREATE TABLE IF NOT EXISTS schema_version (version INTEGER PRIMARY KEY)',
     'CREATE TABLE IF NOT EXISTS tenants (id TEXT PRIMARY KEY, created_at TEXT NOT NULL)',
+    'CREATE TABLE IF NOT EXISTS sessions (token_hash TEXT PRIMARY KEY, tenant TEXT NOT NULL, created_at TEXT NOT NULL, last_seen_at TEXT NOT NULL, expires_at TEXT NOT NULL, absolute_expires_at TEXT NOT NULL, revoked_at TEXT)',
+    'CREATE INDEX IF NOT EXISTS sessions_by_tenant ON sessions(tenant)',
+    'CREATE INDEX IF NOT EXISTS sessions_by_expiry ON sessions(expires_at)',
     `CREATE TABLE IF NOT EXISTS orders (tenant TEXT NOT NULL, id TEXT NOT NULL, product TEXT NOT NULL, sku TEXT NOT NULL, amount INTEGER NOT NULL, delivered_at TEXT, status TEXT NOT NULL, category TEXT NOT NULL, PRIMARY KEY(tenant,id))`,
     'CREATE TABLE IF NOT EXISTS inventory (tenant TEXT NOT NULL, sku TEXT NOT NULL, stock INTEGER NOT NULL CHECK(stock >= 0), PRIMARY KEY(tenant,sku))',
     'CREATE TABLE IF NOT EXISTS conversations (id TEXT PRIMARY KEY, tenant TEXT NOT NULL, title TEXT NOT NULL, created_at TEXT NOT NULL)',
@@ -104,8 +115,10 @@ export async function migrate(db: Store) {
     'CREATE TABLE IF NOT EXISTS eval_runs (id TEXT PRIMARY KEY, tenant TEXT NOT NULL, report TEXT NOT NULL, created_at TEXT NOT NULL)',
     'INSERT INTO schema_version(version) VALUES(1) ON CONFLICT(version) DO NOTHING',
     'INSERT INTO schema_version(version) VALUES(2) ON CONFLICT(version) DO NOTHING',
+    'INSERT INTO schema_version(version) VALUES(3) ON CONFLICT(version) DO NOTHING',
   ];
   await db.transaction(async (tx) => {
+    if (db.dialect === 'postgres') await tx.query('SELECT pg_advisory_xact_lock(817322041)');
     for (const sql of statements) await tx.query(sql);
   });
 }
